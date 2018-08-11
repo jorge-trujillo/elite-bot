@@ -1,0 +1,17 @@
+# application properties
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path: /
+      path-mapping:
+        health: health
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+
+discord:
+  client_id: CLIENT_ID
+  token: TOKEN_STRING
+  permissions: PERMISSIONS_LONG

@@ -1,0 +1,248 @@
+buildscript {
+  ext {
+
+    defaultArgs = [
+        'spring.profiles.active': 'test',
+        'mock_server.host'      : 'localhost'
+    ]
+
+    dockerComposeVersion = '0.3.23'
+
+    // compile dependencies
+    groovyVersion = '2.4.14'
+    springBootVersion = '2.0.4.RELEASE'
+
+    // test dependencies
+    cglibVersion = '3.2.4'
+    objenesisVersion = '2.4'
+    spockVersion = '1.1-groovy-2.4'
+    mockServerVersion = '5.2.3'
+    aspectjVersion = '1.8.13'
+
+    // code check dependencies
+    codeNarcVersion = '1.1'
+  }
+
+  repositories {
+    mavenLocal()
+
+    maven { url "https://plugins.gradle.org/m2/" }
+    jcenter()
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+    classpath "gradle.plugin.com.avast.gradle:docker-compose-gradle-plugin:${dockerComposeVersion}"
+  }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'idea'
+apply plugin: 'codenarc'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'com.avast.gradle.docker-compose'
+
+group 'org.jorgetrujillo.elitebot'
+
+version '0.1.0'
+
+dependencies {
+  // Use the latest Groovy version for building this library
+  compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+
+  compile "org.springframework.boot:spring-boot-starter:${springBootVersion}"
+
+  // Use the awesome Spock testing and specification framework
+  testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+
+  // Javacord
+  compile 'org.javacord:javacord:3.0.0'
+}
+
+// In this section you declare where to find the dependencies of your project
+repositories {
+  mavenLocal()
+
+  maven { url "https://plugins.gradle.org/m2/" }
+  jcenter()
+  mavenCentral()
+}
+
+bootJar {
+  archiveName = 'elite-bot.jar'
+}
+
+configurations {
+  integrationTestCompile.extendsFrom testCompile
+  integrationTestRuntime.extendsFrom testRuntime
+  functionalTestCompile.extendsFrom testCompile
+  functionalTestRuntime.extendsFrom testRuntime
+}
+
+sourceSets {
+  integrationTest {
+    groovy {
+      compileClasspath += main.output + test.output
+      runtimeClasspath += main.output + test.output
+      srcDir file('src/integrationTest/groovy')
+    }
+  }
+  functionalTest {
+    groovy {
+      compileClasspath += main.output + test.output
+      runtimeClasspath += main.output + test.output
+      srcDir file('src/functionalTest/groovy')
+    }
+  }
+}
+
+codenarc {
+  configFile rootProject.file('gradle/codenarc/codenarc.groovy')
+}
+
+codenarcTest {
+  configFile rootProject.file('gradle/codenarc/codenarcTest.groovy')
+}
+
+codenarcIntegrationTest {
+  configFile rootProject.file('gradle/codenarc/codenarcTest.groovy')
+}
+
+codenarcFunctionalTest {
+  configFile rootProject.file('gradle/codenarc/codenarcTest.groovy')
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '4.6'
+}
+
+springBoot {
+  buildInfo()
+}
+
+if (project.hasProperty('showTestOutput')) {
+  test { testLogging { showStandardStreams = true } }
+}
+
+task integrationTest(type: Test) {
+
+  defaultArgs.each { String name, String value ->
+    String argValue = "-D${name}=${System.properties[name] ?: value}"
+    project.logger.lifecycle("Setting ${name} -> ${argValue}")
+    if (jvmArgs) {
+      jvmArgs.add(argValue)
+    } else {
+      jvmArgs = [argValue]
+    }
+  }
+
+  testClassesDirs = sourceSets.integrationTest.output.classesDirs
+  classpath = sourceSets.integrationTest.runtimeClasspath
+  outputs.upToDateWhen { false }
+}
+
+task functionalTest(type: Test) {
+
+  defaultArgs.each { String name, String value ->
+    String argValue = "-D${name}=${System.properties[name] ?: value}"
+    project.logger.lifecycle("Setting ${name} -> ${argValue}")
+    if (jvmArgs) {
+      jvmArgs.add(argValue)
+    } else {
+      jvmArgs = [argValue]
+    }
+  }
+
+  testClassesDirs = sourceSets.functionalTest.output.classesDirs
+  classpath = sourceSets.functionalTest.runtimeClasspath
+  outputs.upToDateWhen { false }
+}
+
+tasks.withType(Test) {
+  if (System.getenv('CI') != null) {
+    maxParallelForks = 1
+  }
+}
+
+dockerCompose.isRequiredBy(functionalTest)
+dockerCompose.isRequiredBy(integrationTest)
+dockerCompose.isRequiredBy(bootRun)
+
+dockerCompose {
+  useComposeFiles = [rootProject.file('src/test/resources/compose/compose-test.yml').absolutePath]
+  executable = '/usr/local/bin/docker-compose'
+  dockerExecutable = '/usr/local/bin/docker'
+}
+
+check.dependsOn integrationTest
+integrationTest.mustRunAfter test
+
+check.dependsOn functionalTest
+functionalTest.mustRunAfter integrationTest
+
+compileGroovy {
+  configure(groovyOptions) {
+    configurationScript = file("$rootDir/gradle/groovy/compiler-config.groovy")
+  }
+}
+
+test {
+  testLogging {
+    // set options for log level LIFECYCLE
+    events "failed"
+    exceptionFormat "full"
+    showCauses = true
+    showExceptions = true
+
+    // set options for log level DEBUG
+    debug {
+      events "started", "skipped", "failed"
+      exceptionFormat "full"
+    }
+
+    // remove standard output/error logging from --info builds
+    // by assigning only 'failed' and 'skipped' events
+    info.events = ["failed", "skipped"]
+  }
+}
+
+functionalTest {
+  testLogging {
+    // set options for log level LIFECYCLE
+    events "failed"
+    exceptionFormat "full"
+    showCauses = true
+    showExceptions = true
+
+    // set options for log level DEBUG
+    debug {
+      events "started", "skipped", "failed"
+      exceptionFormat "full"
+    }
+
+    // remove standard output/error logging from --info builds
+    // by assigning only 'failed' and 'skipped' events
+    info.events = ["failed", "skipped"]
+  }
+}
+
+integrationTest {
+  testLogging {
+    // set options for log level LIFECYCLE
+    events "failed"
+    exceptionFormat "full"
+    showCauses = true
+    showExceptions = true
+
+    // set options for log level DEBUG
+    debug {
+      events "started", "skipped", "failed"
+      exceptionFormat "full"
+    }
+
+    // remove standard output/error logging from --info builds
+    // by assigning only 'failed' and 'skipped' events
+    info.events = ["failed", "skipped"]
+  }
+}
