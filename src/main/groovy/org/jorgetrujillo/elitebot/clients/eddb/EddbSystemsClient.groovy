@@ -5,7 +5,6 @@ import org.jorgetrujillo.elitebot.clients.GenericClient
 import org.jorgetrujillo.elitebot.clients.GenericRequest
 import org.jorgetrujillo.elitebot.clients.GenericResponse
 import org.jorgetrujillo.elitebot.clients.SystemsClient
-import org.jorgetrujillo.elitebot.clients.eddb.domain.EddbStationResult
 import org.jorgetrujillo.elitebot.clients.eddb.domain.EddbSystemResult
 import org.jorgetrujillo.elitebot.domain.SystemsSearchRequest
 import org.jorgetrujillo.elitebot.domain.SystemsSearchRequest.SortType
@@ -38,22 +37,24 @@ class EddbSystemsClient implements SystemsClient {
   @Autowired
   GenericClient genericClient
 
-  System findSystemByName(String name) {
+  List<System> findSystemsByName(String name) {
 
     List<System> systems = []
-    GenericRequest<Object, List<EddbStationResult>> genericRequest = new GenericRequest<>(
-        method: HttpMethod.GET,
-        url: "${EDDB_HOST}/system/search",
-        parameters: [
-            ('system[name]')   : name,
-            ('expand')         : 'station',
-            ('system[version]'): '2'
-        ],
-        typeReference: new ParameterizedTypeReference<List<EddbStationResult>>() {
-        }
-    )
+    GenericRequest<Object, List<EddbSystemResult>> genericRequest =
+        new GenericRequest<Object, List<EddbSystemResult>>(
+            method: HttpMethod.GET,
+            url: "${EDDB_HOST}/system/search",
+            parameters: [
+                ('system[name]')   : name,
+                ('expand')         : 'station',
+                ('system[version]'): '2'
+            ],
+            typeReference: new ParameterizedTypeReference<List<EddbSystemResult>>() {
+            }
+        )
 
-    GenericResponse<List<EddbStationResult>> response = genericClient.getHttpResponse(genericRequest)
+    GenericResponse<List<EddbSystemResult>> response = genericClient.getHttpResponse(genericRequest)
+
     if (response.result) {
       systems = response.result.collect { EddbSystemResult systemResult ->
 
@@ -74,7 +75,6 @@ class EddbSystemsClient implements SystemsClient {
 
         return system
       }
-
     }
 
     return systems
@@ -129,7 +129,6 @@ class EddbSystemsClient implements SystemsClient {
     }
 
     return systems
-
   }
 
   static int getSecurityId(SecurityLevel securityLevel) {

@@ -12,7 +12,7 @@ class LanguageService {
 
     List<String> tokens = message.split('[\\s]+')
 
-    if (message.find(/(?i)where is)/) && message.find(/(?i)system)/)) {
+    if (message.find(/(?i)where is)/) && message.find(/(?i)system)/))  {
       println 'help'
     }
   }

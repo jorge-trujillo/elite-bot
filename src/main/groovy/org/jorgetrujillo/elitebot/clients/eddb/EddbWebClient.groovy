@@ -1,6 +1,5 @@
 package org.jorgetrujillo.elitebot.clients.eddb
 
-import org.jorgetrujillo.elitebot.clients.eddb.EddbSession
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -35,8 +34,7 @@ class EddbWebClient {
       }
       connection.method(Connection.Method.POST)
 
-    }
-    else {
+    } else {
       connection.method(Connection.Method.GET)
     }
 
