@@ -12,6 +12,9 @@ management:
       show-details: always
 
 discord:
-  client_id: CLIENT_ID
-  token: TOKEN_STRING
-  permissions: PERMISSIONS_LONG
+  client_id:
+  token:
+  permissions: 1234
+
+clients:
+  retries: 3

@@ -10,14 +10,11 @@ class LanguageService {
 
   String processMessage(String message) {
 
-    String response
-    if (message =~ /(?i)hi/) {
-      response = GREETING_RESPONSE
-    }
-    else {
-      response = DEFAULT_RESPONSE
-    }
+    List<String> tokens = message.split('[\\s]+')
 
-    return response
+    if (message.find(/(?i)where is)/) && message.find(/(?i)system)/)) {
+      println 'help'
+    }
   }
+
 }

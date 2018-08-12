@@ -12,6 +12,8 @@ buildscript {
     groovyVersion = '2.4.14'
     springBootVersion = '2.0.4.RELEASE'
 
+    jsoupVersion = '1.11.3'
+
     // test dependencies
     cglibVersion = '3.2.4'
     objenesisVersion = '2.4'
@@ -51,10 +53,20 @@ dependencies {
   // Use the latest Groovy version for building this library
   compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
 
-  compile "org.springframework.boot:spring-boot-starter:${springBootVersion}"
+  compile "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+
+  compile "org.jsoup:jsoup:${jsoupVersion}"
 
   // Use the awesome Spock testing and specification framework
   testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+  testCompile "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+  testCompile "org.spockframework:spock-core:${spockVersion}"
+  testCompile "org.spockframework:spock-spring:${spockVersion}"
+  testCompile "cglib:cglib-nodep:${cglibVersion}"
+  testCompile "org.objenesis:objenesis:${objenesisVersion}"
+  testCompile "org.mock-server:mockserver-netty:${mockServerVersion}"
+
+  codenarc "org.codenarc:CodeNarc:${codeNarcVersion}"
 
   // Javacord
   compile 'org.javacord:javacord:3.0.0'
