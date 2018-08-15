@@ -11,6 +11,9 @@ buildscript {
     // compile dependencies
     groovyVersion = '2.4.14'
     springBootVersion = '2.0.4.RELEASE'
+    coreNLPVersion = '3.9.1'
+    jsoupVersion = '1.11.3'
+    jacksonVersion = '2.9.6'
 
     // test dependencies
     cglibVersion = '3.2.4'
@@ -52,9 +55,26 @@ dependencies {
   compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
 
   compile "org.springframework.boot:spring-boot-starter:${springBootVersion}"
+  compile "org.springframework:spring-web:5.0.8.RELEASE"
+
+  compile "org.jsoup:jsoup:${jsoupVersion}"
+
+  compile "edu.stanford.nlp:stanford-corenlp:${coreNLPVersion}"
+  compile "edu.stanford.nlp:stanford-corenlp:${coreNLPVersion}:models-english"
+
+  // jackson support for Java 8 date & time API
+  compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
 
   // Use the awesome Spock testing and specification framework
   testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+  testCompile "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+  testCompile "org.spockframework:spock-core:${spockVersion}"
+  testCompile "org.spockframework:spock-spring:${spockVersion}"
+  testCompile "cglib:cglib-nodep:${cglibVersion}"
+  testCompile "org.objenesis:objenesis:${objenesisVersion}"
+  testCompile "org.mock-server:mockserver-netty:${mockServerVersion}"
+
+  codenarc "org.codenarc:CodeNarc:${codeNarcVersion}"
 
   // Javacord
   compile 'org.javacord:javacord:3.0.0'

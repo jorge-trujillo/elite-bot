@@ -11,7 +11,13 @@ management:
       enabled: true
       show-details: always
 
+# Disable web
+spring.main.web-application-type: none
+
 discord:
-  client_id: CLIENT_ID
-  token: TOKEN_STRING
-  permissions: PERMISSIONS_LONG
+  client_id:
+  token:
+  permissions: 1234
+
+clients:
+  retries: 3
