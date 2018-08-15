@@ -1,5 +1,6 @@
 package org.jorgetrujillo.elitebot.services
 
+@SuppressWarnings('FieldName')
 enum PartOfSpeech {
 
   CC('Coordinating conjunction'),

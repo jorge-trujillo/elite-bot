@@ -13,7 +13,7 @@ class System {
   // Powerplay
   String powerPlay
 
-  // Extended info
+  // Extended info - not always set
   SecurityLevel securityLevel
   String government
   String state

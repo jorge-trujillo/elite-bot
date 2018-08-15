@@ -1,6 +1,7 @@
 package org.jorgetrujillo.elitebot.services
 
 import edu.stanford.nlp.simple.Sentence
+import org.jorgetrujillo.elitebot.domain.elite.System
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -19,24 +20,34 @@ class LanguageServiceSpec extends Specification {
   LanguageService languageService
 
   void setup() {
-    languageService = new LanguageService()
+    languageService = new LanguageService(
+        systemsService: Mock(SystemsService)
+    )
   }
 
   @Unroll
-  void 'ProcessMessage'() {
+  void 'Process a request to find interstellar factors'() {
+
+    given:
+    String message = 'find the nearest interstellar factors to HIP 8561'
+
+    String refId = 'id'
+    System refSystem = new System(name: 'HIP 8561', id: refId)
+    List<System> systems = [
+        new System(name: 'Alpha', id: '1', distanceFromRef: '100 ly'),
+        new System(name: 'Bravo', id: '2', distanceFromRef: '200 ly'),
+    ]
 
     when:
-    String actual = languageService.processMessage(input)
+    String response = languageService.processMessage(message)
 
     then:
-    actual.is(expected)
+    1 * languageService.systemsService.getSystemByName('HIP 8561') >> refSystem
+    1 * languageService.systemsService.getNearestInterstellarFactors(refId) >> systems
     0 * _
 
-    where:
-    input  | expected
-    'hi'   | LanguageService.GREETING_RESPONSE
-    'blah' | LanguageService.DEFAULT_RESPONSE
-
+    and: 'System is returned'
+    response =~ /Alpha/
   }
 
   @Unroll
@@ -49,16 +60,19 @@ class LanguageServiceSpec extends Specification {
     true
     serviceRequest.actionType == actionType
     serviceRequest.resourceType == resourceType
-    serviceRequest.referencePoint == referencePoint
+    serviceRequest.referencePoint.equalsIgnoreCase(referencePoint)
     serviceRequest.modifiers.containsAll(modifiers)
 
     where:
     text                                                     | actionType | resourceType         | referencePoint | modifiers
+    'find nearest interstellar factors to HIP 8561'          | FIND       | INTERSTELLAR_FACTORS | 'HIP 8561'     | []
     'find the nearest station to HIP 8561'                   | FIND       | STATION              | 'HIP 8561'     | []
     'find an interstellar factors near HIP 4922'             | FIND       | INTERSTELLAR_FACTORS | 'HIP 4922'     | []
     'find the highest population system near Hurukuntak'     | FIND       | SYSTEM               | 'Hurukuntak'   | ['highest population']
     'give me the nearest interstellar factors to HIP abc-1'  | FIND       | INTERSTELLAR_FACTORS | 'HIP abc-1'    | []
     'what is the nearest low security system near HIP abc-1' | FIND       | SYSTEM               | 'HIP abc-1'    | ['low security']
+    'find the nearest interstellar factors to kotilem'       | FIND       | INTERSTELLAR_FACTORS | 'kotilem'      | []
+    //'find the nearest interstellar factors to Maya'          | FIND       | INTERSTELLAR_FACTORS | 'maya'         | []
   }
 
   @Unroll
@@ -88,10 +102,6 @@ class LanguageServiceSpec extends Specification {
 
     given:
     Sentence sentence = new Sentence(text)
-    println sentence.tokens()
-        .collect {
-      "${it.originalText()} ${it.posTag()}"
-    }.join(' ')
 
     when:
     List<String> actual = languageService.findTokensOfTypeAfter(wantedTypes, markerType, sentence)

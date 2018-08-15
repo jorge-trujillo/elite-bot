@@ -13,9 +13,6 @@ class EddbSystemsClientIntegrationSpec extends IntegrationTestBase {
   @Autowired
   EddbSystemsClient eddbSystemsClient
 
-  void setup() {
-  }
-
   void 'Find a system by name'() {
 
     given:

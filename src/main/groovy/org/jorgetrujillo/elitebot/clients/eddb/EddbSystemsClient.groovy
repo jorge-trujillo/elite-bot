@@ -29,7 +29,7 @@ import static org.jorgetrujillo.elitebot.domain.elite.SecurityLevel.MEDIUM
 @Slf4j
 class EddbSystemsClient implements SystemsClient {
 
-  private static final String EDDB_HOST = 'https://eddb.io'
+  public static final String EDDB_HOST = 'https://eddb.io'
 
   @Autowired
   EddbWebClient eddbWebClient
@@ -60,7 +60,7 @@ class EddbSystemsClient implements SystemsClient {
 
         List<Station> stations = systemResult.stations?.collect {
           return new Station(
-              id: it.id,
+              id: it.id as String,
               name: it.name,
               landingPad: it.maxLandingPadSize,
               distanceFromStarLs: it.distanceToStar
@@ -68,7 +68,7 @@ class EddbSystemsClient implements SystemsClient {
         }
 
         System system = new System(
-            id: systemResult.id,
+            id: systemResult.id as String,
             name: systemResult.name,
             stations: stations
         )
@@ -106,8 +106,6 @@ class EddbSystemsClient implements SystemsClient {
     Document docCustomConn = eddbWebClient.getWebPage(eddbSession, formParams)
 
     // Construct response and return
-    println docCustomConn.text()
-
     Elements systemRows = docCustomConn.select('table > tbody > tr')
     List<System> systems = systemRows.collect { Element element ->
       System system = new System()

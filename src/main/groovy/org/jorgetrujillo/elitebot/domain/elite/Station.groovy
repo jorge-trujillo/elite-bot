@@ -6,6 +6,6 @@ class Station {
   String id
   String name
   String landingPad
-  long distanceFromStarLs
+  Long distanceFromStarLs
 
 }

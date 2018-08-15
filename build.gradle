@@ -13,6 +13,7 @@ buildscript {
     springBootVersion = '2.0.4.RELEASE'
     coreNLPVersion = '3.9.1'
     jsoupVersion = '1.11.3'
+    jacksonVersion = '2.9.6'
 
     // test dependencies
     cglibVersion = '3.2.4'
@@ -53,12 +54,16 @@ dependencies {
   // Use the latest Groovy version for building this library
   compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
 
-  compile "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+  compile "org.springframework.boot:spring-boot-starter:${springBootVersion}"
+  compile "org.springframework:spring-web:5.0.8.RELEASE"
 
   compile "org.jsoup:jsoup:${jsoupVersion}"
 
   compile "edu.stanford.nlp:stanford-corenlp:${coreNLPVersion}"
   compile "edu.stanford.nlp:stanford-corenlp:${coreNLPVersion}:models-english"
+
+  // jackson support for Java 8 date & time API
+  compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
 
   // Use the awesome Spock testing and specification framework
   testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'

@@ -11,6 +11,9 @@ management:
       enabled: true
       show-details: always
 
+# Disable web
+spring.main.web-application-type: none
+
 discord:
   client_id:
   token:

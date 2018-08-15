@@ -1,5 +1,6 @@
 package org.jorgetrujillo.elitebot.domain
 
+import org.jorgetrujillo.elitebot.domain.elite.PadSize
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 
 /**
@@ -12,6 +13,7 @@ class SystemsSearchRequest {
 
   boolean populated
   SecurityLevel securityLevel
+  PadSize minPadSize
 
   // Paging
   SortType sortType
