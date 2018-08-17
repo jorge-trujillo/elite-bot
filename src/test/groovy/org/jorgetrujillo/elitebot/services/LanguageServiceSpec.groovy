@@ -1,53 +1,26 @@
 package org.jorgetrujillo.elitebot.services
 
 import edu.stanford.nlp.simple.Sentence
-import org.jorgetrujillo.elitebot.domain.elite.System
+import org.jorgetrujillo.elitebot.domain.ServiceRequest
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ActionType.FIND
+import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ResourceType.INTERSTELLAR_FACTORS
+import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ResourceType.STATION
+import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ResourceType.SYSTEM
 import static org.jorgetrujillo.elitebot.services.PartOfSpeech.CD
 import static org.jorgetrujillo.elitebot.services.PartOfSpeech.DT
 import static org.jorgetrujillo.elitebot.services.PartOfSpeech.JJ
 import static org.jorgetrujillo.elitebot.services.PartOfSpeech.NN
 import static org.jorgetrujillo.elitebot.services.PartOfSpeech.VB
-import static org.jorgetrujillo.elitebot.services.ServiceRequest.ActionType.FIND
-import static org.jorgetrujillo.elitebot.services.ServiceRequest.ResourceType.INTERSTELLAR_FACTORS
-import static org.jorgetrujillo.elitebot.services.ServiceRequest.ResourceType.STATION
-import static org.jorgetrujillo.elitebot.services.ServiceRequest.ResourceType.SYSTEM
 
 class LanguageServiceSpec extends Specification {
 
   LanguageService languageService
 
   void setup() {
-    languageService = new LanguageService(
-        systemsService: Mock(SystemsService)
-    )
-  }
-
-  @Unroll
-  void 'Process a request to find interstellar factors'() {
-
-    given:
-    String message = 'find the nearest interstellar factors to HIP 8561'
-
-    String refId = 'id'
-    System refSystem = new System(name: 'HIP 8561', id: refId)
-    List<System> systems = [
-        new System(name: 'Alpha', id: '1', distanceFromRef: '100 ly'),
-        new System(name: 'Bravo', id: '2', distanceFromRef: '200 ly'),
-    ]
-
-    when:
-    String response = languageService.processMessage(message)
-
-    then:
-    1 * languageService.systemsService.getSystemByName('HIP 8561') >> refSystem
-    1 * languageService.systemsService.getNearestInterstellarFactors(refId) >> systems
-    0 * _
-
-    and: 'System is returned'
-    response =~ /Alpha/
+    languageService = new LanguageService()
   }
 
   @Unroll
@@ -57,11 +30,9 @@ class LanguageServiceSpec extends Specification {
     ServiceRequest serviceRequest = languageService.parseRequest(text)
 
     then:
-    true
     serviceRequest.actionType == actionType
     serviceRequest.resourceType == resourceType
-    serviceRequest.referencePoint.equalsIgnoreCase(referencePoint)
-    serviceRequest.modifiers.containsAll(modifiers)
+    serviceRequest.systemCriteria.referenceSystemName.equalsIgnoreCase(referencePoint)
 
     where:
     text                                                     | actionType | resourceType         | referencePoint | modifiers
@@ -72,7 +43,6 @@ class LanguageServiceSpec extends Specification {
     'give me the nearest interstellar factors to HIP abc-1'  | FIND       | INTERSTELLAR_FACTORS | 'HIP abc-1'    | []
     'what is the nearest low security system near HIP abc-1' | FIND       | SYSTEM               | 'HIP abc-1'    | ['low security']
     'find the nearest interstellar factors to kotilem'       | FIND       | INTERSTELLAR_FACTORS | 'kotilem'      | []
-    //'find the nearest interstellar factors to Maya'          | FIND       | INTERSTELLAR_FACTORS | 'maya'         | []
   }
 
   @Unroll

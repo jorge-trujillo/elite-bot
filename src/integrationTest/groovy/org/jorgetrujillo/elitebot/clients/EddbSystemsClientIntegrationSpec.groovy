@@ -2,7 +2,7 @@ package org.jorgetrujillo.elitebot.clients
 
 import org.jorgetrujillo.elitebot.IntegrationTestBase
 import org.jorgetrujillo.elitebot.clients.eddb.EddbSystemsClient
-import org.jorgetrujillo.elitebot.domain.SystemsSearchRequest
+import org.jorgetrujillo.elitebot.domain.SystemCriteria
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.Station
 import org.jorgetrujillo.elitebot.domain.elite.System
@@ -43,14 +43,14 @@ class EddbSystemsClientIntegrationSpec extends IntegrationTestBase {
 
     given:
     String hurukuntakId = '9608'
-    SystemsSearchRequest systemsSearchRequest = new SystemsSearchRequest(
+    SystemCriteria systemCriteria = new SystemCriteria(
         referenceSystemId: hurukuntakId,
-        sortType: SystemsSearchRequest.SortType.DISTANCE_TO_REF,
+        sortType: SystemCriteria.SortType.DISTANCE_TO_REF,
         securityLevel: SecurityLevel.LOW
     )
 
     when:
-    List<System> systems = eddbSystemsClient.findSystems(systemsSearchRequest)
+    List<System> systems = eddbSystemsClient.findSystems(systemCriteria)
 
     then:
     systems

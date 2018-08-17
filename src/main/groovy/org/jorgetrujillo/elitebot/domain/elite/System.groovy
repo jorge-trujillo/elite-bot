@@ -20,9 +20,9 @@ class System {
   Boolean needsPermit
 
   // Location info
-  Long x
-  Long y
-  Long z
+  Double x
+  Double y
+  Double z
 
   // Stations
   List<Station> stations

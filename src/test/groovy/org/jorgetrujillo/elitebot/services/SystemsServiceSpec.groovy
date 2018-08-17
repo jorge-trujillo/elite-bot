@@ -1,7 +1,7 @@
 package org.jorgetrujillo.elitebot.services
 
 import org.jorgetrujillo.elitebot.clients.SystemsClient
-import org.jorgetrujillo.elitebot.domain.SystemsSearchRequest
+import org.jorgetrujillo.elitebot.domain.SystemCriteria
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.System
 import spock.lang.Specification
@@ -41,12 +41,12 @@ class SystemsServiceSpec extends Specification {
     List<System> actual = systemsService.getNearestInterstellarFactors(referenceId)
 
     then:
-    1 * systemsService.systemsClient.findSystems({ SystemsSearchRequest searchRequest ->
-      assert searchRequest.referenceSystemId == referenceId
-      assert searchRequest.securityLevel == SecurityLevel.LOW
-      assert searchRequest.sortType == SystemsSearchRequest.SortType.DISTANCE_TO_REF
+    1 * systemsService.systemsClient.findSystems({ SystemCriteria systemCriteria ->
+      assert systemCriteria.referenceSystemId == referenceId
+      assert systemCriteria.securityLevel == SecurityLevel.LOW
+      assert systemCriteria.sortType == SortType.DISTANCE_TO_REF
       return true
-    } as SystemsSearchRequest) >> expected
+    } as SystemCriteria) >> expected
     0 * _
 
     actual == expected

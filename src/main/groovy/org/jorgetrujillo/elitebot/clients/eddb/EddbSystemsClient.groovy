@@ -6,8 +6,7 @@ import org.jorgetrujillo.elitebot.clients.GenericRequest
 import org.jorgetrujillo.elitebot.clients.GenericResponse
 import org.jorgetrujillo.elitebot.clients.SystemsClient
 import org.jorgetrujillo.elitebot.clients.eddb.domain.EddbSystemResult
-import org.jorgetrujillo.elitebot.domain.SystemsSearchRequest
-import org.jorgetrujillo.elitebot.domain.SystemsSearchRequest.SortType
+import org.jorgetrujillo.elitebot.domain.SystemCriteria
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.Station
 import org.jorgetrujillo.elitebot.domain.elite.System
@@ -19,6 +18,8 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Component
 
+import static org.jorgetrujillo.elitebot.domain.SystemCriteria.SortType.DISTANCE_TO_REF
+import static org.jorgetrujillo.elitebot.domain.SystemCriteria.SortType.POPULATION
 import static org.jorgetrujillo.elitebot.domain.elite.SecurityLevel.ANARCHY
 import static org.jorgetrujillo.elitebot.domain.elite.SecurityLevel.HIGH
 import static org.jorgetrujillo.elitebot.domain.elite.SecurityLevel.LAWLESS
@@ -80,7 +81,7 @@ class EddbSystemsClient implements SystemsClient {
     return systems
   }
 
-  List<System> findSystems(SystemsSearchRequest searchRequest) {
+  List<System> findSystems(SystemCriteria searchRequest) {
 
     // Convert request into a form
     Map<String, String> formParams = [:]
@@ -147,12 +148,12 @@ class EddbSystemsClient implements SystemsClient {
     }
   }
 
-  static String getSortParameter(SortType sortType) {
+  static String getSortParameter(SystemCriteria.SortType sortType) {
 
     switch (sortType) {
-      case SortType.DISTANCE_TO_REF:
+      case DISTANCE_TO_REF:
         return 'referenceDistance'
-      case SortType.POPULATION:
+      case POPULATION:
         return 'population'
       default:
         return ''
