@@ -59,27 +59,38 @@ class RequestProcessorService {
     if (!referenceSystem) {
       return "I could not locate the system ${serviceRequest.systemCriteria.referenceSystemName}, sorry"
     }
+    serviceRequest.systemCriteria.referenceSystemId = referenceSystem.id
 
-    String response
+    StringBuilder response = new StringBuilder()
     switch (serviceRequest.resourceType) {
 
       case ServiceRequest.ResourceType.SYSTEM:
-        List<System> systems = systemsService.(referenceSystem.id)
+        List<System> systems = systemsService.findSystems(serviceRequest.systemCriteria)
         if (systems) {
-          response = "You should try ${systems[0].name}! It is ${systems[0].distanceFromRef} from your location"
+          response.append("Here are 5 matching systems:\n")
+          systems.subList(0, Math.min(5, systems.size())).each {
+            response.append(" * **${it.name}** - ${it.distanceFromRef} from you and ${it.allegiance}-controlled\n")
+          }
+
+          response.append("You should try ${systems[0].name}! It is ${systems[0].distanceFromRef} from your location")
         }
         break
       case ServiceRequest.ResourceType.INTERSTELLAR_FACTORS:
-        List<System> systems = systemsService.getNearestInterstellarFactors(referenceSystem.id)
+        List<System> systems = systemsService.getNearestInterstellarFactors(referenceSystem.id,
+            serviceRequest.systemCriteria.minPadSize)
+
         if (systems) {
-          response = "You should try ${systems[0].name}! It is ${systems[0].distanceFromRef} from your location"
+          response.append("Here are 3 good options:\n")
+          systems.subList(0, Math.min(3, systems.size())).each {
+            response.append(" * **${it.name}** - ${it.distanceFromRef} from you and ${it.allegiance}-controlled\n")
+          }
         }
         break
       default:
-        response = "I can't really help yet with finding a ${serviceRequest.resourceType.name()}!"
+        response.append("I can't really help yet with finding a ${serviceRequest.resourceType.name()}!")
     }
 
-    return response
+    return response.toString()
   }
 
   private String getSystemInfo(ServiceRequest serviceRequest) {
@@ -115,7 +126,7 @@ class RequestProcessorService {
     double distance = Math.sqrt(Math.pow(systems[0].x - systems[1].x, 2) + Math.pow(systems[0].y - systems[1].y, 2) +
         Math.pow(systems[0].z - systems[1].z, 2))
 
-    return "The distance between **${systems[0].name}** and **${systems[1].name}** is ${distance} ly"
+    return "The distance between **${systems[0].name}** and **${systems[1].name}** is *${distance} ly*"
   }
 
 }

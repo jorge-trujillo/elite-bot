@@ -6,12 +6,13 @@ class System {
   String id
   String name
   String url
-  String allegiance
+  Allegiance allegiance
   long population
   String distanceFromRef
 
   // Powerplay
-  String powerPlay
+  PowerType powerType
+  PowerEffect powerEffect
 
   // Extended info - not always set
   SecurityLevel securityLevel

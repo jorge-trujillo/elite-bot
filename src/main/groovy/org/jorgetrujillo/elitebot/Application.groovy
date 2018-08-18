@@ -42,16 +42,19 @@ class Application implements CommandLineRunner {
             name: event.message.author.name
         )
 
-        if (sender.clientId != clientId) {
+        // Only process message if I was mentioned
+        if (sender.clientId != clientId && event.message.mentionedUsers.find {it.id == clientId }) {
           String response = processorService.processMessage(event.getMessage().getContent())
 
           log.info("Message from ${event.message.author} in ${event.message.channel}: ${event.message.content}")
           log.info("Response: ${response}")
 
           // Send the response
+
           if (response) {
             event.getChannel().sendMessage(response)
           }
+
         }
       }
 
