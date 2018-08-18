@@ -2,7 +2,11 @@ package org.jorgetrujillo.elitebot.clients
 
 import org.jorgetrujillo.elitebot.IntegrationTestBase
 import org.jorgetrujillo.elitebot.clients.eddb.EddbSystemsClient
-import org.jorgetrujillo.elitebot.domain.SystemsSearchRequest
+import org.jorgetrujillo.elitebot.domain.SystemCriteria
+import org.jorgetrujillo.elitebot.domain.elite.Allegiance
+import org.jorgetrujillo.elitebot.domain.elite.PadSize
+import org.jorgetrujillo.elitebot.domain.elite.PowerEffect
+import org.jorgetrujillo.elitebot.domain.elite.PowerType
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.Station
 import org.jorgetrujillo.elitebot.domain.elite.System
@@ -27,6 +31,7 @@ class EddbSystemsClientIntegrationSpec extends IntegrationTestBase {
     and: 'First system is Maya'
     systems[0].name == 'Maya'
     systems[0].id == '13432'
+    systems[0].url != null
 
     systems[0].stations.size() == 11
     Station station = systems[0].stations.find { it.id == '45711' }
@@ -43,20 +48,66 @@ class EddbSystemsClientIntegrationSpec extends IntegrationTestBase {
 
     given:
     String hurukuntakId = '9608'
-    SystemsSearchRequest systemsSearchRequest = new SystemsSearchRequest(
+    SystemCriteria systemCriteria = new SystemCriteria(
         referenceSystemId: hurukuntakId,
-        sortType: SystemsSearchRequest.SortType.DISTANCE_TO_REF,
+        sortType: SystemCriteria.SortType.DISTANCE_TO_REF,
         securityLevel: SecurityLevel.LOW
     )
 
     when:
-    List<System> systems = eddbSystemsClient.findSystems(systemsSearchRequest)
+    List<System> systems = eddbSystemsClient.findSystems(systemCriteria)
 
     then:
     systems
     systems[0].name == 'Anareldt'
-    systems[0].allegiance == 'Empire'
+    systems[0].allegiance == Allegiance.EMPIRE
     systems[0].population > 0
     systems[0].distanceFromRef == '4.44 ly'
+  }
+
+  void 'Find federation systems near another'() {
+
+    given:
+    String hurukuntakId = '9608'
+    SystemCriteria systemCriteria = new SystemCriteria(
+        referenceSystemId: hurukuntakId,
+        sortType: SystemCriteria.SortType.DISTANCE_TO_REF,
+        minPadSize: PadSize.M,
+        allegiance: Allegiance.FEDERATION
+    )
+
+    when:
+    List<System> systems = eddbSystemsClient.findSystems(systemCriteria)
+
+    then:
+    systems
+    systems[0].name == 'Gui Renes'
+    systems[0].allegiance == Allegiance.FEDERATION
+    systems[0].population > 0
+    systems[0].distanceFromRef == '8.10 ly'
+  }
+
+  void 'Find Pranav Antal systems near another'() {
+
+    given:
+    String hurukuntakId = '9608'
+    SystemCriteria systemCriteria = new SystemCriteria(
+        referenceSystemId: hurukuntakId,
+        sortType: SystemCriteria.SortType.DISTANCE_TO_REF,
+        minPadSize: PadSize.M,
+        powerType: PowerType.PRANAV_ANTAL,
+        powerEffect: PowerEffect.CONTROL
+    )
+
+    when:
+    List<System> systems = eddbSystemsClient.findSystems(systemCriteria)
+
+    then:
+    systems
+    systems[0].name == 'Allowa'
+    systems[0].powerType == PowerType.PRANAV_ANTAL
+    systems[0].powerEffect == PowerEffect.CONTROL
+    systems[0].population > 0
+    systems[0].distanceFromRef == '135.55 ly'
   }
 }

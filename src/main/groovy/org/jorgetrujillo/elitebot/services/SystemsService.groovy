@@ -2,7 +2,8 @@ package org.jorgetrujillo.elitebot.services
 
 import groovy.util.logging.Slf4j
 import org.jorgetrujillo.elitebot.clients.SystemsClient
-import org.jorgetrujillo.elitebot.domain.SystemsSearchRequest
+import org.jorgetrujillo.elitebot.domain.SystemCriteria
+import org.jorgetrujillo.elitebot.domain.elite.PadSize
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.System
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,16 +21,21 @@ class SystemsService {
     return systems ? systems.first() : null
   }
 
-  List<System> getNearestInterstellarFactors(String referenceSystemId) {
+  List<System> getNearestInterstellarFactors(String referenceSystemId, PadSize minPadSize = null) {
 
     // Now find the right system and station
-    SystemsSearchRequest systemsSearchRequest = new SystemsSearchRequest(
+    SystemCriteria systemCriteria = new SystemCriteria(
         referenceSystemId: referenceSystemId,
         securityLevel: SecurityLevel.LOW,
-        sortType: SystemsSearchRequest.SortType.DISTANCE_TO_REF
+        sortType: SystemCriteria.SortType.DISTANCE_TO_REF,
+        minPadSize: minPadSize ?: null
     )
-    List<System> systems = systemsClient.findSystems(systemsSearchRequest)
+    List<System> systems = systemsClient.findSystems(systemCriteria)
     return systems
 
+  }
+
+  List<System> findSystems(SystemCriteria systemCriteria) {
+    return systemsClient.findSystems(systemCriteria)
   }
 }

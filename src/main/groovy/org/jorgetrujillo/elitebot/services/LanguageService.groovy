@@ -3,52 +3,18 @@ package org.jorgetrujillo.elitebot.services
 import edu.stanford.nlp.simple.Sentence
 import edu.stanford.nlp.simple.Token
 import groovy.util.logging.Slf4j
-import org.jorgetrujillo.elitebot.domain.elite.System
+import org.jorgetrujillo.elitebot.domain.ServiceRequest
 import org.jorgetrujillo.elitebot.exceptions.LanguageRequestParseException
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-import static org.jorgetrujillo.elitebot.services.ServiceRequest.ActionType.FIND
+import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ActionType.FIND
 
+/**
+ * Service that parses natural language queries (experimental)
+ */
 @Service
 @Slf4j
 class LanguageService {
-
-  @Autowired
-  SystemsService systemsService
-
-  String processMessage(String message) {
-
-    try {
-      // Parse the request
-      ServiceRequest serviceRequest = parseRequest(message)
-
-      // Execute it
-      String response = null
-      switch (serviceRequest.resourceType) {
-        case ServiceRequest.ResourceType.INTERSTELLAR_FACTORS:
-          System referenceSystem = systemsService.getSystemByName(serviceRequest.referencePoint)
-          if (referenceSystem) {
-            List<System> systems = systemsService.getNearestInterstellarFactors(referenceSystem.id)
-            if (systems) {
-              response = "You should try ${systems[0].name}! It is ${systems[0].distanceFromRef} from your location"
-            }
-          } else {
-            response = "I could not locate the system ${serviceRequest.referencePoint}, sorry"
-          }
-          break
-        default:
-          response = "I can't really help yet with finding a ${serviceRequest.resourceType.name()}!"
-      }
-
-      return response
-    }
-    catch (LanguageRequestParseException e) {
-      log.error("Exception parsing ${message}", e)
-    }
-
-    return 'I cannot understand this request! Ask me for help to see what I can do.'
-  }
 
   ServiceRequest parseRequest(String text) {
 
@@ -80,22 +46,16 @@ class LanguageService {
       return findTokensOfTypeAfter(acceptableReferencePointTypes, it, sentence) ?: null
     }
     if (refPointTokens) {
-      serviceRequest.referencePoint = refPointTokens.join(' ')
+      serviceRequest.systemCriteria.referenceSystemName = refPointTokens.join(' ')
     } else {
       log.warn("Could not find resource type: ${printSentence(sentence)}")
       throw new LanguageRequestParseException('resource type')
     }
 
-    // Find any modifiers for search
-    List<String> modifiers = findPatterns([PartOfSpeech.JJ, PartOfSpeech.NN], sentence)
-    modifiers = modifiers ?: findPatterns([PartOfSpeech.JJS, PartOfSpeech.NN], sentence)
-
-    serviceRequest.modifiers = modifiers.collect()
-
     return serviceRequest
   }
 
-  private String printSentence(Sentence sentence) {
+  private static String printSentence(Sentence sentence) {
     return sentence.tokens()
         .collect { "${it.originalText()}[${it.posTag()}]" }
         .join(' ')

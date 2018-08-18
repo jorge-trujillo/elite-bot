@@ -1,14 +1,16 @@
-package org.jorgetrujillo.elitebot.services
+package org.jorgetrujillo.elitebot.domain
 
 class ServiceRequest {
 
   ActionType actionType
   ResourceType resourceType
-  String referencePoint
-  List<String> modifiers
+
+  Tuple2<String, String> systemPair
+
+  SystemCriteria systemCriteria = new SystemCriteria()
 
   enum ActionType {
-    FIND
+    FIND, SYSTEM_DETAILS, COMPUTE_DISTANCE
   }
 
   enum ResourceType {

@@ -5,8 +5,7 @@ import org.javacord.api.DiscordApi
 import org.javacord.api.DiscordApiBuilder
 import org.javacord.api.event.message.MessageCreateEvent
 import org.jorgetrujillo.elitebot.domain.Sender
-
-import org.jorgetrujillo.elitebot.services.LanguageService
+import org.jorgetrujillo.elitebot.services.RequestProcessorService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
@@ -20,7 +19,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 class Application implements CommandLineRunner {
 
   @Autowired
-  LanguageService languageService
+  RequestProcessorService processorService
 
   @Value('${discord.token:#null}')
   String discordToken
@@ -43,16 +42,19 @@ class Application implements CommandLineRunner {
             name: event.message.author.name
         )
 
-        if (sender.clientId != clientId) {
-          String response = languageService.processMessage(event.getMessage().getContent())
+        // Only process message if I was mentioned
+        if (sender.clientId != clientId && event.message.mentionedUsers.find {it.id == clientId }) {
+          String response = processorService.processMessage(event.getMessage().getContent())
 
           log.info("Message from ${event.message.author} in ${event.message.channel}: ${event.message.content}")
           log.info("Response: ${response}")
 
           // Send the response
+
           if (response) {
             event.getChannel().sendMessage(response)
           }
+
         }
       }
 
