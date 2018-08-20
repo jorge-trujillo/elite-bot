@@ -34,7 +34,7 @@ class EddbWebClient {
     return getEddbPage(url, eddbSession, formParams)
   }
 
-  private static refreshSession(EddbSession eddbSession) {
+  private static void refreshSession(EddbSession eddbSession) {
 
     log.info('Refreshing EDDB session')
 

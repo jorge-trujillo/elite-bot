@@ -1,8 +1,6 @@
 package org.jorgetrujillo.elitebot.services
 
 import org.jorgetrujillo.elitebot.clients.SystemsClient
-import org.jorgetrujillo.elitebot.domain.SystemCriteria
-import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.System
 import spock.lang.Specification
 import spock.lang.Unroll

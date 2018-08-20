@@ -129,7 +129,7 @@ class EddbSystemsClient implements SystemsClient {
 
     String population = rows[4].select('div.label-value')[0].text()
     if (security) {
-      system.population = Long.valueOf(population.replaceAll(/[^0-9]/,''))
+      system.population = Long.valueOf(population.replaceAll(/[^0-9]/, ''))
     }
 
     return system
@@ -138,39 +138,7 @@ class EddbSystemsClient implements SystemsClient {
   List<System> findSystems(SystemCriteria searchRequest) {
 
     // Convert request into a form
-    Map<String, String> formParams = [:]
-
-    // Add form params
-    if (searchRequest.securityLevel) {
-      formParams.put('system[security_id]', getSecurityId(searchRequest.securityLevel) as String)
-    }
-
-    if (searchRequest.referenceSystemId) {
-      formParams.put('system[referenceSystemId]', searchRequest.referenceSystemId)
-    }
-
-    // Add powers
-    if (searchRequest.powerEffect) {
-      formParams.put('system[powerEffectTypes]', getPowerEffectType(searchRequest.powerEffect) as String)
-    }
-    if (searchRequest.powerType) {
-      formParams.put('system[powerIds]', getPowerId(searchRequest.powerType) as String)
-    }
-
-    // Request orbital if a pad size is specified
-    if (searchRequest.minPadSize) {
-      formParams.put('system[stationFilter]', '2')
-    }
-
-    // Allegiance
-    if (searchRequest.allegiance) {
-      formParams.put('system[allegiance_id]', getAllegianceId(searchRequest.allegiance) as String)
-    }
-
-    // Add sorting
-    if (searchRequest.sortType) {
-      formParams.put('system[sort]', getSortParameter(searchRequest.sortType))
-    }
+    Map<String, String> formParams = buildFormParams(searchRequest)
 
     log.info("Querying EDDB Systems with params: ${formParams}")
     Document docCustomConn = eddbWebClient.getWebPage("${EDDB_HOST}/${SYSTEMS_URI}", formParams)
@@ -224,6 +192,44 @@ class EddbSystemsClient implements SystemsClient {
     return systems
   }
 
+  private Map<String, String> buildFormParams(SystemCriteria searchRequest) {
+    Map<String, String> formParams = [:]
+
+    // Add form params
+    if (searchRequest.securityLevel) {
+      formParams.put('system[security_id]', getSecurityId(searchRequest.securityLevel) as String)
+    }
+
+    if (searchRequest.referenceSystemId) {
+      formParams.put('system[referenceSystemId]', searchRequest.referenceSystemId)
+    }
+
+    // Add powers
+    if (searchRequest.powerEffect) {
+      formParams.put('system[powerEffectTypes]', getPowerEffectType(searchRequest.powerEffect) as String)
+    }
+    if (searchRequest.powerType) {
+      formParams.put('system[powerIds]', getPowerId(searchRequest.powerType) as String)
+    }
+
+    // Request orbital if a pad size is specified
+    if (searchRequest.minPadSize) {
+      formParams.put('system[stationFilter]', '2')
+    }
+
+    // Allegiance
+    if (searchRequest.allegiance) {
+      formParams.put('system[allegiance_id]', getAllegianceId(searchRequest.allegiance) as String)
+    }
+
+    // Add sorting
+    if (searchRequest.sortType) {
+      formParams.put('system[sort]', getSortParameter(searchRequest.sortType))
+    }
+
+    return formParams
+  }
+
   static Allegiance parseAllegiance(String text) {
     Allegiance foundAllegiance = Allegiance.values().find { Allegiance allegiance ->
       return StringUtils.getLevenshteinDistance(allegiance.toString().toLowerCase(), text.toLowerCase()) <= 2
@@ -241,7 +247,7 @@ class EddbSystemsClient implements SystemsClient {
   }
 
   static Double cleanNumericValue(String value) {
-    String distanceNoUnits = value.replaceAll(/[^0-9.]+/,'')
+    String distanceNoUnits = value.replaceAll(/[^0-9.]+/, '')
     if (distanceNoUnits.number) {
       return Double.valueOf(distanceNoUnits)
     }

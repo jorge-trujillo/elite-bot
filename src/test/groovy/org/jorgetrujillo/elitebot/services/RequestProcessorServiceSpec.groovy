@@ -15,7 +15,8 @@ class RequestProcessorServiceSpec extends Specification {
   void setup() {
     requestProcessorService = new RequestProcessorService(
         simpleRequestService: Mock(SimpleRequestService),
-        systemsService: Mock(SystemsService)
+        systemsService: Mock(SystemsService),
+        stationsService: Mock(StationsService)
     )
   }
 
@@ -34,9 +35,9 @@ class RequestProcessorServiceSpec extends Specification {
 
     String refId = 'id'
     System refSystem = new System(name: 'HIP 8561', id: refId)
-    List<System> systems = [
-        new System(name: 'Alpha', id: '1', distanceFromRef: '100 ly'),
-        new System(name: 'Bravo', id: '2', distanceFromRef: '200 ly'),
+    List<Station> stations = [
+        new Station(name: 'Alpha', id: '1', distanceFromStarLs: 10, distanceFromRefLy: 100),
+        new Station(name: 'Bravo', id: '2', distanceFromStarLs: 20, distanceFromRefLy: 200),
     ]
 
     when:
@@ -45,11 +46,12 @@ class RequestProcessorServiceSpec extends Specification {
     then:
     1 * requestProcessorService.simpleRequestService.parseRequest(message) >> serviceRequest
     1 * requestProcessorService.systemsService.getSystemByName('HIP 8561') >> refSystem
-    1 * requestProcessorService.systemsService.getNearestInterstellarFactors(refId, PadSize.L) >> systems
+    1 * requestProcessorService.stationsService.getNearestInterstellarFactors(refId, PadSize.L) >> stations
     0 * _
 
-    and: 'System is returned'
+    and: 'Stations are returned'
     response =~ /Alpha/
+    response =~ /Bravo/
   }
 
   void 'Process a request to find a system'() {
@@ -69,8 +71,8 @@ class RequestProcessorServiceSpec extends Specification {
     String refId = 'id'
     System refSystem = new System(name: 'HIP 8561', id: refId)
     List<System> systems = [
-        new System(name: 'Alpha', id: '1', distanceFromRef: '100 ly'),
-        new System(name: 'Bravo', id: '2', distanceFromRef: '200 ly'),
+        new System(name: 'Alpha', id: '1', distanceFromRefLy: 100),
+        new System(name: 'Bravo', id: '2', distanceFromRefLy: 200),
     ]
 
     when:
@@ -101,7 +103,7 @@ class RequestProcessorServiceSpec extends Specification {
     System responseSystem = new System(
         name: 'Maya',
         id: '1',
-        distanceFromRef: '100 ly',
+        distanceFromRefLy: 100,
         stations: [
             new Station(name: 'Orbital', landingPad: PadSize.L, distanceFromStarLs: 100)
         ]
@@ -138,8 +140,8 @@ class RequestProcessorServiceSpec extends Specification {
 
     then:
     1 * requestProcessorService.simpleRequestService.parseRequest(message) >> serviceRequest
-    1 * requestProcessorService.systemsService.getSystemByName('alpha') >> systems[0]
-    1 * requestProcessorService.systemsService.getSystemByName('sol') >> systems[1]
+    1 * requestProcessorService.systemsService.getSystemByName('alpha', true) >> systems[0]
+    1 * requestProcessorService.systemsService.getSystemByName('sol', true) >> systems[1]
     0 * _
 
     and: 'Distance is returned'

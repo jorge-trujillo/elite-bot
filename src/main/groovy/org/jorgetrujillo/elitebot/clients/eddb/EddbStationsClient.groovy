@@ -7,7 +7,6 @@ import org.jorgetrujillo.elitebot.clients.GenericRequest
 import org.jorgetrujillo.elitebot.clients.GenericResponse
 import org.jorgetrujillo.elitebot.clients.StationsClient
 import org.jorgetrujillo.elitebot.clients.eddb.domain.EddbStationResult
-import org.jorgetrujillo.elitebot.domain.ServiceRequest
 import org.jorgetrujillo.elitebot.domain.StationCriteria
 import org.jorgetrujillo.elitebot.domain.elite.Allegiance
 import org.jorgetrujillo.elitebot.domain.elite.PadSize
@@ -102,8 +101,8 @@ class EddbStationsClient implements StationsClient {
       station.systemName = columns[1].selectFirst('a').text()
       // Extract the system id
       String systemLink = columns[1].selectFirst('a').attr('href')
-      Matcher matcher
-      if ((matcher = systemLink =~ /([0-9]+)$/)) {
+      Matcher matcher = (systemLink =~ /([0-9]+)$/)
+      if (matcher) {
         station.systemId = matcher.group(1)
       }
 
@@ -143,7 +142,6 @@ class EddbStationsClient implements StationsClient {
 
     return stations
   }
-
 
   private Map<String, String> buildFormParams(StationCriteria searchRequest) {
     Map<String, String> formParams = [:]

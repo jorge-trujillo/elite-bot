@@ -81,7 +81,6 @@ class SimpleRequestServiceSpec extends Specification {
     'find: interstellar factors near: HIP 8225 pad: L' | FIND       | INTERSTELLAR_FACTORS | 'HIP 8225'     | PadSize.L | null       | null     | null      | null
   }
 
-
   @Unroll
   void 'Parse a details request for: #text'() {
 

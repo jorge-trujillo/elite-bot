@@ -21,134 +21,198 @@ class SimpleRequestService {
    * @param text
    * @return
    */
-  ServiceRequest parseRequest(String text) {
+  ServiceRequest parseRequest(String requestText) {
 
     ServiceRequest serviceRequest = new ServiceRequest()
 
-    text = text.replaceAll(/:[\s]*/, ': ')
+    String text = requestText.replaceAll(/:[\s]*/, ': ')
     List<String> tokens = Arrays.asList(text.toLowerCase().split(/[\s]+/))
 
     tokens.eachWithIndex { String token, int index ->
 
       if (token.equalsIgnoreCase('find:')) {
-        serviceRequest.actionType = ServiceRequest.ActionType.FIND
-
-        List<String> resourceTypeTokens = getTokensAfter(index, tokens)
-
-        ServiceRequest.ResourceType resourceType = ServiceRequest.ResourceType.values().find {
-          ServiceRequest.ResourceType resourceTypeVal ->
-            List<String> resourceTypeTerms = resourceTypeVal.terms
-            return resourceTypeTokens.find { String resourceTypeToken ->
-              return resourceTypeTerms.find { measureDistance(it, resourceTypeToken) <= 2 }
-            }
-        }
-        serviceRequest.resourceType = resourceType
-
-        if (!serviceRequest.resourceType) {
-          throw new SimpleRequestParseException(SimpleRequestField.RESOURCE_TYPE)
-        }
+        parseFindTokens(index, tokens, serviceRequest)
       }
 
       if (token.equalsIgnoreCase('distance:')) {
-        serviceRequest.actionType = ServiceRequest.ActionType.COMPUTE_DISTANCE
-
-        int toTokenIndex = tokens.findIndexOf { it == 'to:' }
-        String systemA = getTokensAfter(index, tokens).join(' ')
-        String systemB = getTokensAfter(toTokenIndex, tokens).join(' ')
-        serviceRequest.systemPair = new Tuple2<String, String>(systemA, systemB)
-
-        if (!systemA || !systemB) {
-          throw new SimpleRequestParseException(SimpleRequestField.DISTANCE_LOCATION)
-        }
+        parseDistanceTokens(index, tokens, serviceRequest)
       }
 
       if (token.equalsIgnoreCase('system:')) {
-        serviceRequest.actionType = ServiceRequest.ActionType.SYSTEM_DETAILS
-
-        String systemName = getTokensAfter(index, tokens).join(' ')
-        serviceRequest.systemCriteria.referenceSystemName = systemName
-
-        if (!serviceRequest.systemCriteria.referenceSystemName) {
-          throw new SimpleRequestParseException(SimpleRequestField.DETAILS_LOCATION)
-        }
+        parseSystemTokens(index, tokens, serviceRequest)
       }
 
       if (token.equalsIgnoreCase('near:')) {
-
-        String systemName = getTokensAfter(index, tokens).join(' ')
-        serviceRequest.systemCriteria.referenceSystemName = systemName
-
-        if (!serviceRequest.systemCriteria.referenceSystemName) {
-          throw new SimpleRequestParseException(SimpleRequestField.REFERENCE_SYSTEM)
-        }
+        parseNearTokens(index, tokens, serviceRequest)
       }
 
       if (token.equalsIgnoreCase('pad:')) {
-
-        List<String> padTokens = getTokensAfter(index, tokens)
-        if (padTokens) {
-          if (padTokens.first().toLowerCase().startsWith('l')) {
-            serviceRequest.systemCriteria.minPadSize = PadSize.L
-          } else if (padTokens.first().toLowerCase().startsWith('l')) {
-            serviceRequest.systemCriteria.minPadSize = PadSize.M
-          }
-        }
-
-        if (!serviceRequest.systemCriteria.minPadSize) {
-          throw new SimpleRequestParseException(SimpleRequestField.PAD_SIZE)
-        }
+        parsePadTokens(index, tokens, serviceRequest)
       }
 
       if (token.equalsIgnoreCase('allegiance:')) {
-
-        String allegianceString = getTokensAfter(index, tokens).join(' ')
-        Allegiance allegiance = Allegiance.values().find {
-          return measureDistance(allegianceString, it.toString().toLowerCase()) <= 2
-        }
-        serviceRequest.systemCriteria.allegiance = allegiance
-
-        if (!serviceRequest.systemCriteria.allegiance) {
-          throw new SimpleRequestParseException(SimpleRequestField.ALLEGIANCE)
-        }
+        parseAllegianceTokens(index, tokens, serviceRequest)
       }
 
       if (token.equalsIgnoreCase('security:')) {
-
-        String security = getTokensAfter(index, tokens).join(' ')
-        SecurityLevel securityLevel = SecurityLevel.values().find {
-          return measureDistance(security, it.toString().toLowerCase()) <= 2
-        }
-        serviceRequest.systemCriteria.securityLevel = securityLevel
-
-        if (!serviceRequest.systemCriteria.securityLevel) {
-          throw new SimpleRequestParseException(SimpleRequestField.SECURITY_LEVEL)
-        }
+        parseSecurityLevelTokens(index, tokens, serviceRequest)
       }
 
       if (token.equalsIgnoreCase('power:')) {
-
-        List<String> powerTokens = getTokensAfter(index, tokens)
-        if (powerTokens.last() in ['c', 'e']) {
-          String powerEffectString = powerTokens.pop()
-          PowerEffect powerEffect = powerEffectString == 'c' ? PowerEffect.CONTROL : PowerEffect.EXPLOITED
-          serviceRequest.systemCriteria.powerEffect = powerEffect
-        }
-
-        PowerType powerType = PowerType.values().find { PowerType powerTypeVal ->
-          List<String> powerNameTokens = Arrays.asList(powerTypeVal.powerName.toLowerCase().split(/[\s-_]+/))
-          return powerNameTokens.find { String powerNameToken ->
-            return powerTokens.find { measureDistance(it, powerNameToken) <= 2 }
-          }
-        }
-        serviceRequest.systemCriteria.powerType = powerType
-
-        if (!serviceRequest.systemCriteria.powerType) {
-          throw new SimpleRequestParseException(SimpleRequestField.POWER)
-        }
+        parsePowerTokens(index, tokens, serviceRequest)
       }
     }
 
     return serviceRequest
+  }
+
+  private void parseFindTokens(int index, List<String> tokens, ServiceRequest serviceRequest) {
+    serviceRequest.actionType = ServiceRequest.ActionType.FIND
+
+    ServiceRequest.ResourceType foundResourceType = matchTokensToValue(
+        index,
+        tokens,
+        ServiceRequest.ResourceType.values().collect { ServiceRequest.ResourceType value ->
+          return new Tuple2<List<String>, ServiceRequest.ResourceType>(value.terms, value)
+        },
+        true
+    )
+    serviceRequest.resourceType = foundResourceType
+
+    if (!serviceRequest.resourceType) {
+      throw new SimpleRequestParseException(SimpleRequestField.RESOURCE_TYPE)
+    }
+  }
+
+  private void parseDistanceTokens(int index, List<String> tokens, ServiceRequest serviceRequest) {
+
+    serviceRequest.actionType = ServiceRequest.ActionType.COMPUTE_DISTANCE
+
+    int toTokenIndex = tokens.findIndexOf { it == 'to:' }
+    String systemA = getTokensAfter(index, tokens).join(' ')
+    String systemB = getTokensAfter(toTokenIndex, tokens).join(' ')
+    serviceRequest.systemPair = new Tuple2<String, String>(systemA, systemB)
+
+    if (!systemA || !systemB) {
+      throw new SimpleRequestParseException(SimpleRequestField.DISTANCE_LOCATION)
+    }
+  }
+
+  private void parseSystemTokens(int index, List<String> tokens, ServiceRequest serviceRequest) {
+    serviceRequest.actionType = ServiceRequest.ActionType.SYSTEM_DETAILS
+
+    String systemName = getTokensAfter(index, tokens).join(' ')
+    serviceRequest.systemCriteria.referenceSystemName = systemName
+
+    if (!serviceRequest.systemCriteria.referenceSystemName) {
+      throw new SimpleRequestParseException(SimpleRequestField.DETAILS_LOCATION)
+    }
+  }
+
+  private void parseNearTokens(int index, List<String> tokens, ServiceRequest serviceRequest) {
+    String systemName = getTokensAfter(index, tokens).join(' ')
+    serviceRequest.systemCriteria.referenceSystemName = systemName
+
+    if (!serviceRequest.systemCriteria.referenceSystemName) {
+      throw new SimpleRequestParseException(SimpleRequestField.REFERENCE_SYSTEM)
+    }
+  }
+
+  private void parsePadTokens(int index, List<String> tokens, ServiceRequest serviceRequest) {
+    PadSize foundPadSize = matchTokensToValue(
+        index,
+        tokens,
+        PadSize.values().collect { PadSize value ->
+          return new Tuple2<List<String>, PadSize>([value.toString(), value.name], value)
+        }
+    )
+    serviceRequest.systemCriteria.minPadSize = foundPadSize
+
+    if (!serviceRequest.systemCriteria.minPadSize) {
+      throw new SimpleRequestParseException(SimpleRequestField.PAD_SIZE)
+    }
+  }
+
+  private void parseAllegianceTokens(int index, List<String> tokens, ServiceRequest serviceRequest) {
+    Allegiance foundAllegiance = matchTokensToValue(
+        index,
+        tokens,
+        Allegiance.values().collect { Allegiance value ->
+          return new Tuple2<List<String>, Allegiance>([value.toString()], value)
+        },
+        true
+    )
+
+    serviceRequest.systemCriteria.allegiance = foundAllegiance
+
+    if (!serviceRequest.systemCriteria.allegiance) {
+      throw new SimpleRequestParseException(SimpleRequestField.ALLEGIANCE)
+    }
+  }
+
+  private void parseSecurityLevelTokens(int index, List<String> tokens, ServiceRequest serviceRequest) {
+    SecurityLevel foundLevel = matchTokensToValue(
+        index,
+        tokens,
+        SecurityLevel.values().collect { SecurityLevel value ->
+          return new Tuple2<List<String>, SecurityLevel>([value.toString()], value)
+        },
+        true
+    )
+    serviceRequest.systemCriteria.securityLevel = foundLevel
+
+    if (!serviceRequest.systemCriteria.securityLevel) {
+      throw new SimpleRequestParseException(SimpleRequestField.SECURITY_LEVEL)
+    }
+  }
+
+  private void parsePowerTokens(int index, List<String> tokens, ServiceRequest serviceRequest) {
+    List<String> powerTokens = getTokensAfter(index, tokens)
+    if (powerTokens.last() in ['c', 'e']) {
+      String powerEffectString = powerTokens.pop()
+      PowerEffect powerEffect = powerEffectString == 'c' ? PowerEffect.CONTROL : PowerEffect.EXPLOITED
+      serviceRequest.systemCriteria.powerEffect = powerEffect
+    }
+
+    PowerType powerType = PowerType.values().find { PowerType powerTypeVal ->
+      List<String> powerNameTokens = Arrays.asList(powerTypeVal.powerName.toLowerCase().split(/[\s-_]+/))
+      return powerNameTokens.find { String powerNameToken ->
+        return powerTokens.find { measureDistance(it, powerNameToken) <= 2 }
+      }
+    }
+    serviceRequest.systemCriteria.powerType = powerType
+
+    if (!serviceRequest.systemCriteria.powerType) {
+      throw new SimpleRequestParseException(SimpleRequestField.POWER)
+    }
+  }
+
+  private <T> T matchTokensToValue(int tokenIndex, List<String> tokens, List<Tuple2<List<String>, T>> values,
+                                   boolean fuzzy = false) {
+
+    // Get the tokens after the provided index
+    List<String> valueTokens = getTokensAfter(tokenIndex, tokens)
+
+    // Now find the right value from the provided value set
+    T foundValue = values.findResult { Tuple2<List<String>, T> value ->
+
+      if (value.getFirst().find { String stringValue ->
+        return valueTokens.find {
+          if (fuzzy) {
+            return measureDistance(it.toLowerCase(), stringValue.toLowerCase()) <= 2
+          }
+
+          // Straight match if not fuzzy
+          return it.toLowerCase() == stringValue.toLowerCase()
+        }
+      }) {
+        return value.getSecond()
+      }
+
+      return null as T
+    }
+
+    return foundValue
   }
 
   private static List<String> getTokensAfter(int tokenIndex, List<String> tokens) {

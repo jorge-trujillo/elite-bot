@@ -39,13 +39,13 @@ class RequestProcessorService {
       String response
       switch (serviceRequest.actionType) {
         case ServiceRequest.ActionType.FIND:
-          return executeFindRequest(serviceRequest)
+          response = executeFindRequest(serviceRequest)
           break
         case ServiceRequest.ActionType.SYSTEM_DETAILS:
-          return getSystemInfo(serviceRequest)
+          response = getSystemInfo(serviceRequest)
           break
         case ServiceRequest.ActionType.COMPUTE_DISTANCE:
-          return computeDistance(serviceRequest)
+          response = computeDistance(serviceRequest)
           break
         default:
           response = generateHelpMessage()
@@ -69,57 +69,75 @@ class RequestProcessorService {
     }
     serviceRequest.systemCriteria.referenceSystemId = referenceSystem.id
 
-    StringBuilder response = new StringBuilder()
+    String response
     switch (serviceRequest.resourceType) {
 
       case ServiceRequest.ResourceType.SYSTEM:
         List<System> systems = systemsService.findSystems(serviceRequest.systemCriteria)
         if (systems) {
-          response.append("Here are 5 matching systems:\n")
-          systems.subList(0, Math.min(5, systems.size())).each {
-
-            String powerDesc = ''
-            if (it.powerType && it.powerEffect) {
-              switch (it.powerEffect) {
-                case PowerEffect.CONTROL:
-                  powerDesc = ", and under control of ${it.powerType.powerName}"
-                  break
-                case PowerEffect.EXPLOITED:
-                  powerDesc = ", and exploited by ${it.powerType.powerName}"
-                  break
-                case PowerEffect.EXPANSION:
-                  powerDesc = ", and expanded to by ${it.powerType.powerName}"
-                  break
-              }
-            }
-
-            response.append(" * **${it.name}** - ${it.distanceFromRefLy} ly from you, " +
-                "allegiance is ${it.allegiance}${powerDesc}\n")
-          }
+          response = createFindSystemsResponse(systems)
         }
         break
+
       case ServiceRequest.ResourceType.INTERSTELLAR_FACTORS:
         List<Station> stations = stationsService.getNearestInterstellarFactors(referenceSystem.id,
             serviceRequest.systemCriteria.minPadSize)
 
         if (stations) {
-          // Get the stations that are within 2000 ls first
-          List<Station> filteredList = stations.findAll {
-            it.distanceFromStarLs <= 2000
-          }
-          filteredList.addAll(stations.findAll {
-            !(it in filteredList)
-          })
-
-          response.append("Here are 3 good options:\n")
-          filteredList.subList(0, Math.min(3, filteredList.size())).each {
-            response.append(" * **${it.name}** in the **${it.systemName}** system - ${it.distanceFromRefLy} ly from you " +
-                "and ${it.distanceFromStarLs} ls from the star\n")
-          }
+          response = createFindStationsResponse(stations)
         }
         break
+
       default:
-        response.append("I can't really help yet with finding a ${serviceRequest.resourceType.name()}!")
+        response = "I can't really help yet with finding a ${serviceRequest.resourceType.name()}!"
+    }
+
+    return response
+  }
+
+  private String createFindSystemsResponse(List<System> systems) {
+    StringBuilder response = new StringBuilder()
+
+    response.append('Here are 5 matching systems:\n')
+    systems.subList(0, Math.min(5, systems.size())).each {
+
+      String powerDesc = ''
+      if (it.powerType && it.powerEffect) {
+        switch (it.powerEffect) {
+          case PowerEffect.CONTROL:
+            powerDesc = ", and under control of ${it.powerType.powerName}"
+            break
+          case PowerEffect.EXPLOITED:
+            powerDesc = ", and exploited by ${it.powerType.powerName}"
+            break
+          case PowerEffect.EXPANSION:
+            powerDesc = ", and expanded to by ${it.powerType.powerName}"
+            break
+        }
+      }
+
+      response.append(" * **${it.name}** - ${it.distanceFromRefLy} ly from you, " +
+          "allegiance is ${it.allegiance}${powerDesc}\n")
+    }
+
+    return response.toString()
+  }
+
+  private String createFindStationsResponse(List<Station> stations) {
+    StringBuilder response = new StringBuilder()
+
+    // Get the stations that are within 2000 ls first
+    List<Station> filteredList = stations.findAll { Station station ->
+      station.distanceFromStarLs <= 2000
+    }
+    filteredList.addAll(stations.findAll {
+      !(it in filteredList)
+    })
+
+    response.append('Here are 3 matching stations:\n')
+    filteredList.subList(0, Math.min(3, filteredList.size())).each {
+      response.append(" * **${it.name}** in the **${it.systemName}** system - ${it.distanceFromRefLy} ly from you " +
+          "and ${it.distanceFromStarLs} ls from the star\n")
     }
 
     return response.toString()
@@ -138,7 +156,8 @@ class RequestProcessorService {
         ?.sort { a, b -> a.distanceFromStarLs <=> b.distanceFromStarLs }
         ?.each { Station station ->
 
-      response.append(" * **${station.name}** - ${station.distanceFromStarLs} ls from the star and has a ${station.landingPad} pad\n")
+      response.append(" * **${station.name}** - ${station.distanceFromStarLs} ls from the star " +
+          "and has a ${station.landingPad} pad\n")
     }
     response.append("You can also check out ${referenceSystem.url} to see more")
 
@@ -162,14 +181,16 @@ class RequestProcessorService {
         Math.pow(systems[0].z - systems[1].z, 2))
 
     return "The distance between **${systems[0].name}** and **${systems[1].name}** is " +
-        "*${String.format("%.2f", distance)} ly*"
+        "*${String.format('%.2f', distance)} ly*"
   }
 
   private String generateHelpMessage(SimpleRequestField field = null) {
 
     StringBuilder stringBuilder = new StringBuilder()
 
-    if (!field) {
+    if (field) {
+      stringBuilder.append(field.helpText)
+    } else {
       stringBuilder.append('You need help and you got it! Here is what I can do... ' +
           'quick note is that **bold** fields are required: \n')
       stringBuilder.append(' - *Find systems*: **find**: system **near**: hurukuntak ' +
@@ -178,11 +199,8 @@ class RequestProcessorService {
       stringBuilder.append(' - *Find interstellar factors*: **find**: interstellar factors **near**: sol *pad*: L\n')
       stringBuilder.append(' - *Find distance*: **distance**: sol **to**: maya\n')
       stringBuilder.append('More coming soon!\n')
-    } else {
-      stringBuilder.append(field.helpText)
     }
 
     return stringBuilder.toString()
   }
-
 }
