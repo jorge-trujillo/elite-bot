@@ -1,10 +1,9 @@
 package org.jorgetrujillo.elitebot.services
 
 import org.jorgetrujillo.elitebot.clients.SystemsClient
-import org.jorgetrujillo.elitebot.domain.SystemCriteria
-import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.System
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class SystemsServiceSpec extends Specification {
 
@@ -16,39 +15,31 @@ class SystemsServiceSpec extends Specification {
     )
   }
 
-  void 'GetSystemByName'() {
+  @Unroll
+  void 'GetSystemByName when includeLocation is #includeLocation'() {
 
     given:
     String name = 'maya'
-    System expected = new System()
+    System expected = new System(id: '1')
+    System location = new System(id: '1', x: 1, y: 1, z: 1)
 
     when:
-    System actual = systemsService.getSystemByName(name)
+    System actual = systemsService.getSystemByName(name, includeLocation)
 
     then:
     1 * systemsService.systemsClient.findSystemsByName(name) >> [expected]
+    calls * systemsService.systemsClient.getSystemById('1') >> location
     0 * _
+
     actual.is(expected)
+    actual.x == (includeLocation ? 1 : null)
+    actual.y == (includeLocation ? 1 : null)
+    actual.z == (includeLocation ? 1 : null)
+
+    where:
+    includeLocation | calls
+    false           | 0
+    true            | 1
   }
 
-  void 'GetNearestInterstellarFactors'() {
-
-    given:
-    String referenceId = 'id'
-    List<System> expected = [new System()]
-
-    when:
-    List<System> actual = systemsService.getNearestInterstellarFactors(referenceId)
-
-    then:
-    1 * systemsService.systemsClient.findSystems({ SystemCriteria systemCriteria ->
-      assert systemCriteria.referenceSystemId == referenceId
-      assert systemCriteria.securityLevel == SecurityLevel.LOW
-      assert systemCriteria.sortType == SortType.DISTANCE_TO_REF
-      return true
-    } as SystemCriteria) >> expected
-    0 * _
-
-    actual == expected
-  }
 }

@@ -9,6 +9,7 @@ import org.jorgetrujillo.elitebot.clients.SystemsClient
 import org.jorgetrujillo.elitebot.clients.eddb.domain.EddbSystemResult
 import org.jorgetrujillo.elitebot.domain.SystemCriteria
 import org.jorgetrujillo.elitebot.domain.elite.Allegiance
+import org.jorgetrujillo.elitebot.domain.elite.PadSize
 import org.jorgetrujillo.elitebot.domain.elite.PowerEffect
 import org.jorgetrujillo.elitebot.domain.elite.PowerType
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
@@ -35,12 +36,15 @@ import static org.jorgetrujillo.elitebot.domain.elite.SecurityLevel.MEDIUM
 class EddbSystemsClient implements SystemsClient {
 
   public static final String EDDB_HOST = 'https://eddb.io'
+  public static final String SYSTEMS_URI = 'system'
 
   @Autowired
   EddbWebClient eddbWebClient
 
   @Autowired
   GenericClient genericClient
+
+  // Session info
 
   List<System> findSystemsByName(String name) {
 
@@ -67,7 +71,8 @@ class EddbSystemsClient implements SystemsClient {
           return new Station(
               id: it.id as String,
               name: it.name,
-              landingPad: it.maxLandingPadSize,
+              url: "${EDDB_HOST}/station/${it.id}",
+              landingPad: it.maxLandingPadSize ? PadSize.valueOf(it.maxLandingPadSize) : null,
               distanceFromStarLs: it.distanceToStar
           )
         }
@@ -86,9 +91,108 @@ class EddbSystemsClient implements SystemsClient {
     return systems
   }
 
+  System getSystemById(String systemId) {
+    log.info("Querying EDDB Systems for ID: ${systemId}")
+
+    Document docCustomConn = eddbWebClient.getWebPage("${EDDB_HOST}/${SYSTEMS_URI}/${systemId}")
+
+    System system = new System()
+    // Construct response and return
+    system.name = docCustomConn.select('ul.breadcrumb > li.active').text()
+    system.id = systemId
+
+    Element panelBody = docCustomConn.selectFirst('div.panel-body')
+    Elements rows = panelBody.select('div.row')
+
+    String coords = rows[0].select('div.label-value')[0].text()
+    if (coords) {
+      String[] vals = coords.split(/[\s]+[\/][\s]+/)
+      system.x = Double.valueOf(vals[0])
+      system.y = Double.valueOf(vals[1])
+      system.z = Double.valueOf(vals[2])
+    }
+
+    String distance = rows[0].select('div.label-value')[1].text()
+    if (distance) {
+      system.distanceFromRefLy = cleanNumericValue(distance)
+    }
+
+    String allegiance = rows[1].select('div.label-value')[1].text()
+    if (allegiance) {
+      system.allegiance = parseAllegiance(allegiance)
+    }
+
+    String security = rows[3].select('div.label-value')[1].text()
+    if (security) {
+      system.securityLevel = parseSecurityLevel(security)
+    }
+
+    String population = rows[4].select('div.label-value')[0].text()
+    if (security) {
+      system.population = Long.valueOf(population.replaceAll(/[^0-9]/, ''))
+    }
+
+    return system
+  }
+
   List<System> findSystems(SystemCriteria searchRequest) {
 
     // Convert request into a form
+    Map<String, String> formParams = buildFormParams(searchRequest)
+
+    log.info("Querying EDDB Systems with params: ${formParams}")
+    Document docCustomConn = eddbWebClient.getWebPage("${EDDB_HOST}/${SYSTEMS_URI}", formParams)
+
+    // Construct response and return
+    Elements systemRows = docCustomConn.select('table > tbody > tr')
+    List<System> systems = systemRows.collect { Element element ->
+      System system = new System()
+      system.id = element.attr('data-key')
+
+      List<Element> columns = element.select('td')
+
+      system.url = "${EDDB_HOST}${columns[0].selectFirst('a').attr('href')}"
+      system.name = columns[0].selectFirst('a').text()
+      String pop = columns[3].text()?.replaceAll(',', '')
+      if (pop && pop.isNumber()) {
+        system.population = Long.valueOf(pop)
+      }
+
+      // Match powerplay
+      String powerPlayString = columns[4].text()
+      if (powerPlayString) {
+        powerPlayString.split(/[\s]*:[\s]*/).each { String powerPlayToken ->
+          if (powerPlayToken == 'C') {
+            system.powerEffect = PowerEffect.CONTROL
+          }
+          if (powerPlayToken == 'E') {
+            system.powerEffect = PowerEffect.EXPLOITED
+          }
+
+          PowerType foundType = PowerType.values().find { PowerType powerVal ->
+            powerVal.powerName.equalsIgnoreCase(powerPlayToken)
+          }
+          if (foundType) {
+            system.powerType = foundType
+          }
+        }
+      }
+
+      // Match allegiance
+      String allegiance = columns[2].text()
+      if (allegiance) {
+        system.allegiance = parseAllegiance(allegiance)
+      }
+
+      system.distanceFromRefLy = cleanNumericValue(columns[5].text())
+
+      return system
+    }
+
+    return systems
+  }
+
+  private Map<String, String> buildFormParams(SystemCriteria searchRequest) {
     Map<String, String> formParams = [:]
 
     // Add form params
@@ -123,64 +227,32 @@ class EddbSystemsClient implements SystemsClient {
       formParams.put('system[sort]', getSortParameter(searchRequest.sortType))
     }
 
-    // Start session
-    EddbSession eddbSession = new EddbSession()
-    eddbWebClient.getWebPage(eddbSession)
+    return formParams
+  }
 
-    log.info("Querying EDDB with params: ${formParams}")
-    Document docCustomConn = eddbWebClient.getWebPage(eddbSession, formParams)
-
-    // Construct response and return
-    Elements systemRows = docCustomConn.select('table > tbody > tr')
-    List<System> systems = systemRows.collect { Element element ->
-      System system = new System()
-      system.id = element.attr('data-key')
-
-      List<Element> columns = element.select('td')
-
-      system.url = "${EDDB_HOST}${columns[0].selectFirst('a').attr('href')}"
-      system.name = columns[0].selectFirst('a').text()
-      String pop = columns[3].text()?.replaceAll(',', '')
-      if (pop && pop.isNumber()) {
-        system.population = Long.valueOf(pop)
-      }
-
-      // Match powerplay
-      String powerPlayString = columns[4].text()
-      if (powerPlayString) {
-        powerPlayString.split(/[\s]*:[\s]*/).each {
-          if (it == 'C') {
-            system.powerEffect = PowerEffect.CONTROL
-          }
-          if (it == 'E') {
-            system.powerEffect = PowerEffect.EXPLOITED
-          }
-
-          PowerType foundType = PowerType.values().find { PowerType powerVal ->
-            powerVal.powerName.equalsIgnoreCase(it)
-          }
-          if (foundType) {
-            system.powerType = foundType
-          }
-        }
-      }
-
-      // Match allegiance
-      String allegiance = columns[2].text()
-      if (allegiance) {
-        Allegiance foundAllegiance = Allegiance.values().find {
-          return StringUtils.getLevenshteinDistance(it.toString().toLowerCase(), allegiance.toLowerCase()) <= 2
-        }
-        if (foundAllegiance) {
-          system.allegiance = foundAllegiance
-        }
-      }
-      system.distanceFromRef = columns[5].text()
-
-      return system
+  static Allegiance parseAllegiance(String text) {
+    Allegiance foundAllegiance = Allegiance.values().find { Allegiance allegiance ->
+      return StringUtils.getLevenshteinDistance(allegiance.toString().toLowerCase(), text.toLowerCase()) <= 2
     }
 
-    return systems
+    return foundAllegiance
+  }
+
+  static SecurityLevel parseSecurityLevel(String text) {
+    SecurityLevel foundLevel = SecurityLevel.values().find { SecurityLevel securityLevel ->
+      return StringUtils.getLevenshteinDistance(securityLevel.toString().toLowerCase(), text.toLowerCase()) <= 2
+    }
+
+    return foundLevel
+  }
+
+  static Double cleanNumericValue(String value) {
+    String distanceNoUnits = value.replaceAll(/[^0-9.]+/, '')
+    if (distanceNoUnits.number) {
+      return Double.valueOf(distanceNoUnits)
+    }
+
+    return null
   }
 
   static int getSecurityId(SecurityLevel securityLevel) {
@@ -236,7 +308,7 @@ class EddbSystemsClient implements SystemsClient {
   }
 
   static Integer getPowerId(PowerType powerType) {
-    switch(powerType.powerName) {
+    switch (powerType.powerName) {
 
       case 'Aisling Duval':
         return 6
@@ -252,9 +324,9 @@ class EddbSystemsClient implements SystemsClient {
         return 2
       case 'Li Yong-Rui':
         return 9
-      case  'Pranav Antal':
+      case 'Pranav Antal':
         return 10
-      case  'Yuri Grom':
+      case 'Yuri Grom':
         return 11
       case 'Zachary Hudson':
         return 3

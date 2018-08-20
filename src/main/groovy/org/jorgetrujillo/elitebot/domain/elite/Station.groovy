@@ -5,7 +5,17 @@ class Station {
   // Basic details
   String id
   String name
-  String landingPad
+  String url
+  PadSize landingPad
   Long distanceFromStarLs
+  Allegiance allegiance
 
+  boolean planetary
+
+  // System name and ID
+  String systemName
+  String systemId
+
+  // Distance from reference point
+  Double distanceFromRefLy
 }

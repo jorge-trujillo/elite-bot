@@ -8,7 +8,7 @@ class System {
   String url
   Allegiance allegiance
   long population
-  String distanceFromRef
+  Double distanceFromRefLy
 
   // Powerplay
   PowerType powerType

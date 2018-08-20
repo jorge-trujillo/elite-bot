@@ -94,6 +94,7 @@ class LanguageService {
     return matches
   }
 
+  @SuppressWarnings('UnusedPrivateMethod')
   private static List<String> findPatterns(List<PartOfSpeech> tagPattern, Sentence sentence) {
     int sequenceLength = tagPattern.size()
 
