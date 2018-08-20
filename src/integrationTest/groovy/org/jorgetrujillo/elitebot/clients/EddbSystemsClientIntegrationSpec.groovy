@@ -36,12 +36,34 @@ class EddbSystemsClientIntegrationSpec extends IntegrationTestBase {
     systems[0].stations.size() == 11
     Station station = systems[0].stations.find { it.id == '45711' }
     station.name == 'Barnes Enterprise'
-    station.landingPad == 'L'
+    station.landingPad == PadSize.L
     station.distanceFromStarLs == 109
 
     and: 'Second system is Mayaco'
     systems[1].name == 'Mayaco'
     systems[1].id == '13433'
+  }
+
+  void 'Load system by ID'() {
+
+    given:
+    String refId = '9608'
+
+    when:
+    System system = eddbSystemsClient.getSystemById(refId)
+
+    then:
+    system
+    system.name == 'Hurukuntak'
+    system.id == '9608'
+    system.x == 55.03125
+    system.y == -24.9375
+    system.z == 116.75
+
+    system.allegiance == Allegiance.EMPIRE
+    system.distanceFromRefLy == 131.46
+    system.securityLevel == SecurityLevel.HIGH
+    system.population >= 18000000
   }
 
   void 'Find low security systems near another'() {
@@ -62,7 +84,7 @@ class EddbSystemsClientIntegrationSpec extends IntegrationTestBase {
     systems[0].name == 'Anareldt'
     systems[0].allegiance == Allegiance.EMPIRE
     systems[0].population > 0
-    systems[0].distanceFromRef == '4.44 ly'
+    systems[0].distanceFromRefLy == 4.44
   }
 
   void 'Find federation systems near another'() {
@@ -84,7 +106,7 @@ class EddbSystemsClientIntegrationSpec extends IntegrationTestBase {
     systems[0].name == 'Gui Renes'
     systems[0].allegiance == Allegiance.FEDERATION
     systems[0].population > 0
-    systems[0].distanceFromRef == '8.10 ly'
+    systems[0].distanceFromRefLy == 8.1
   }
 
   void 'Find Pranav Antal systems near another'() {
@@ -108,6 +130,6 @@ class EddbSystemsClientIntegrationSpec extends IntegrationTestBase {
     systems[0].powerType == PowerType.PRANAV_ANTAL
     systems[0].powerEffect == PowerEffect.CONTROL
     systems[0].population > 0
-    systems[0].distanceFromRef == '135.55 ly'
+    systems[0].distanceFromRefLy == 135.55
   }
 }

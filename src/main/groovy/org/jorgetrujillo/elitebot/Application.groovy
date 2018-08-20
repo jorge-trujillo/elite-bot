@@ -43,7 +43,11 @@ class Application implements CommandLineRunner {
         )
 
         // Only process message if I was mentioned
-        if (sender.clientId != clientId && event.message.mentionedUsers.find {it.id == clientId }) {
+        if (sender.clientId != clientId && event.message.mentionedUsers.find { it.id == clientId }) {
+
+          // Print an ack message
+          event.getChannel().sendMessage("I'll see if I can help with that @${event.message.author.name}")
+
           String response = processorService.processMessage(event.getMessage().getContent())
 
           log.info("Message from ${event.message.author} in ${event.message.channel}: ${event.message.content}")

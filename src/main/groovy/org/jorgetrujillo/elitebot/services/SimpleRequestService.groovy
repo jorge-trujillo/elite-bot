@@ -7,6 +7,8 @@ import org.jorgetrujillo.elitebot.domain.elite.PadSize
 import org.jorgetrujillo.elitebot.domain.elite.PowerEffect
 import org.jorgetrujillo.elitebot.domain.elite.PowerType
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
+import org.jorgetrujillo.elitebot.exceptions.SimpleRequestField
+import org.jorgetrujillo.elitebot.exceptions.SimpleRequestParseException
 import org.springframework.stereotype.Service
 
 @Service
@@ -24,7 +26,7 @@ class SimpleRequestService {
     ServiceRequest serviceRequest = new ServiceRequest()
 
     text = text.replaceAll(/:[\s]*/, ': ')
-    List<String> tokens = text.toLowerCase().split(/[\s]+/)
+    List<String> tokens = Arrays.asList(text.toLowerCase().split(/[\s]+/))
 
     tokens.eachWithIndex { String token, int index ->
 
@@ -40,8 +42,11 @@ class SimpleRequestService {
               return resourceTypeTerms.find { measureDistance(it, resourceTypeToken) <= 2 }
             }
         }
-
         serviceRequest.resourceType = resourceType
+
+        if (!serviceRequest.resourceType) {
+          throw new SimpleRequestParseException(SimpleRequestField.RESOURCE_TYPE)
+        }
       }
 
       if (token.equalsIgnoreCase('distance:')) {
@@ -50,8 +55,11 @@ class SimpleRequestService {
         int toTokenIndex = tokens.findIndexOf { it == 'to:' }
         String systemA = getTokensAfter(index, tokens).join(' ')
         String systemB = getTokensAfter(toTokenIndex, tokens).join(' ')
-
         serviceRequest.systemPair = new Tuple2<String, String>(systemA, systemB)
+
+        if (!systemA || !systemB) {
+          throw new SimpleRequestParseException(SimpleRequestField.DISTANCE_LOCATION)
+        }
       }
 
       if (token.equalsIgnoreCase('system:')) {
@@ -59,19 +67,35 @@ class SimpleRequestService {
 
         String systemName = getTokensAfter(index, tokens).join(' ')
         serviceRequest.systemCriteria.referenceSystemName = systemName
+
+        if (!serviceRequest.systemCriteria.referenceSystemName) {
+          throw new SimpleRequestParseException(SimpleRequestField.DETAILS_LOCATION)
+        }
       }
 
       if (token.equalsIgnoreCase('near:')) {
 
         String systemName = getTokensAfter(index, tokens).join(' ')
         serviceRequest.systemCriteria.referenceSystemName = systemName
+
+        if (!serviceRequest.systemCriteria.referenceSystemName) {
+          throw new SimpleRequestParseException(SimpleRequestField.REFERENCE_SYSTEM)
+        }
       }
 
       if (token.equalsIgnoreCase('pad:')) {
 
         List<String> padTokens = getTokensAfter(index, tokens)
         if (padTokens) {
-          serviceRequest.systemCriteria.minPadSize = padTokens.first().startsWith('l') ? PadSize.L : null
+          if (padTokens.first().toLowerCase().startsWith('l')) {
+            serviceRequest.systemCriteria.minPadSize = PadSize.L
+          } else if (padTokens.first().toLowerCase().startsWith('l')) {
+            serviceRequest.systemCriteria.minPadSize = PadSize.M
+          }
+        }
+
+        if (!serviceRequest.systemCriteria.minPadSize) {
+          throw new SimpleRequestParseException(SimpleRequestField.PAD_SIZE)
         }
       }
 
@@ -82,6 +106,10 @@ class SimpleRequestService {
           return measureDistance(allegianceString, it.toString().toLowerCase()) <= 2
         }
         serviceRequest.systemCriteria.allegiance = allegiance
+
+        if (!serviceRequest.systemCriteria.allegiance) {
+          throw new SimpleRequestParseException(SimpleRequestField.ALLEGIANCE)
+        }
       }
 
       if (token.equalsIgnoreCase('security:')) {
@@ -91,6 +119,10 @@ class SimpleRequestService {
           return measureDistance(security, it.toString().toLowerCase()) <= 2
         }
         serviceRequest.systemCriteria.securityLevel = securityLevel
+
+        if (!serviceRequest.systemCriteria.securityLevel) {
+          throw new SimpleRequestParseException(SimpleRequestField.SECURITY_LEVEL)
+        }
       }
 
       if (token.equalsIgnoreCase('power:')) {
@@ -103,12 +135,16 @@ class SimpleRequestService {
         }
 
         PowerType powerType = PowerType.values().find { PowerType powerTypeVal ->
-          List<String> powerNameTokens = powerTypeVal.powerName.toLowerCase().split(/[\s-_]+/)
+          List<String> powerNameTokens = Arrays.asList(powerTypeVal.powerName.toLowerCase().split(/[\s-_]+/))
           return powerNameTokens.find { String powerNameToken ->
             return powerTokens.find { measureDistance(it, powerNameToken) <= 2 }
           }
         }
         serviceRequest.systemCriteria.powerType = powerType
+
+        if (!serviceRequest.systemCriteria.powerType) {
+          throw new SimpleRequestParseException(SimpleRequestField.POWER)
+        }
       }
     }
 

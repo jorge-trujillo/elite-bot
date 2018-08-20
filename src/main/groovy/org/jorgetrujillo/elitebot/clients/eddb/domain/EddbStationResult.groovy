@@ -6,11 +6,14 @@ class EddbStationResult {
 
   long id
   String name
-  long systemId
   String maxLandingPadSize
   long distanceToStar
   String faction
   int typeId
+  String allegiance
+  boolean isPlanetary
+
+  SystemSummary system
 
   boolean hasBlackmarket
   boolean hasRefuel
@@ -24,4 +27,9 @@ class EddbStationResult {
   boolean hasTechnologyBroker
 
   Instant updatedAt
+
+  static class SystemSummary {
+    String name
+    Long id
+  }
 }

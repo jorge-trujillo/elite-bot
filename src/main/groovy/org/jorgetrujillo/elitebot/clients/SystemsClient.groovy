@@ -5,6 +5,8 @@ import org.jorgetrujillo.elitebot.domain.elite.System
 
 interface SystemsClient {
 
+  System getSystemById(String id)
+
   List<System> findSystemsByName(String name)
 
   List<System> findSystems(SystemCriteria systemCriteria)
