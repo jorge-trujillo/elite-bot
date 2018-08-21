@@ -1,5 +1,8 @@
 package org.jorgetrujillo.elitebot.domain
 
+import groovy.transform.EqualsAndHashCode
+
+@EqualsAndHashCode
 class ServiceRequest {
 
   ActionType actionType

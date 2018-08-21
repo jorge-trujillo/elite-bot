@@ -3,9 +3,13 @@ package org.jorgetrujillo.elitebot
 import groovy.util.logging.Slf4j
 import org.javacord.api.DiscordApi
 import org.javacord.api.DiscordApiBuilder
+import org.javacord.api.entity.channel.ChannelType
+import org.javacord.api.entity.channel.PrivateChannel
+import org.javacord.api.entity.user.User
 import org.javacord.api.event.message.MessageCreateEvent
 import org.jorgetrujillo.elitebot.domain.Sender
 import org.jorgetrujillo.elitebot.services.RequestProcessorService
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
@@ -21,11 +25,14 @@ class Application implements CommandLineRunner {
   @Autowired
   RequestProcessorService processorService
 
-  @Value('${discord.token:#null}')
+  @Value('${discord.token:#{null}}')
   String discordToken
 
-  @Value('${discord.client_id:#null}')
+  @Value('${discord.client_id:#{null}}')
   Long clientId
+
+  @Value('${discord.log_channel_id:#{null}}')
+  Long logChannelId
 
   @Override
   void run(String... args) {
@@ -37,28 +44,42 @@ class Application implements CommandLineRunner {
       // Add a listener which answers with "Pong!" if someone writes "!ping"
       api.addMessageCreateListener { MessageCreateEvent event ->
 
+        MDC.put('request_id', UUID.randomUUID().toString())
+
         Sender sender = new Sender(
             clientId: event.message.author.id,
             name: event.message.author.name
         )
 
-        // Only process message if I was mentioned
-        if (sender.clientId != clientId && event.message.mentionedUsers.find { it.id == clientId }) {
+        // Only process message if I was mentioned, or if in private channel
+        boolean isPrivateChannel = (event.message.channel.type == ChannelType.PRIVATE_CHANNEL)
+        if (sender.clientId != api.getYourself().id &&
+            (event.message.mentionedUsers.find { it.id == clientId } || isPrivateChannel)) {
 
           // Print an ack message
-          event.getChannel().sendMessage("I'll see if I can help with that @${event.message.author.name}")
+          event.getChannel().sendMessage("I'll see if I can help with that ${event.message.author.name}...")
 
+          // Get the response
           String response = processorService.processMessage(event.getMessage().getContent())
 
-          log.info("Message from ${event.message.author} in ${event.message.channel}: ${event.message.content}")
+          log.info("Message from ${event.message.author} in ${event.message.channel.type}: ${event.message.content}")
           log.info("Response: ${response}")
 
-          // Send the response
-
+          // Send the response. Directly mention the user if not a private channel
           if (response) {
-            event.getChannel().sendMessage(response)
+            User messageAuthor = event.message.userAuthor.orElse(null)
+            String mention = (messageAuthor && !isPrivateChannel) ? messageAuthor.mentionTag : ''
+            event.getChannel().sendMessage(mention + response)
           }
 
+          // Send a log message to me
+          if (logChannelId) {
+            PrivateChannel privateChannel = api.getPrivateChannelById(logChannelId).orElse(null)
+            privateChannel?.sendMessage(
+                "**Request**: ${event.getMessage().getContent().replaceAll(/@[^\s]+/, '')}\n" +
+                    "**Response**: ${response}"
+            )
+          }
         }
       }
 
@@ -72,5 +93,6 @@ class Application implements CommandLineRunner {
   static void main(String[] args) {
     SpringApplication.run(Application, args)
   }
+
 }
 
