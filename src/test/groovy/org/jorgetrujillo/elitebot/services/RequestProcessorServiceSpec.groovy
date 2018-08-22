@@ -48,6 +48,10 @@ class RequestProcessorServiceSpec extends Specification {
     1 * requestProcessorService.simpleRequestService.parseRequest(message) >> serviceRequest
     1 * requestProcessorService.systemsService.getSystemByName('HIP 8561') >> refSystem
     1 * requestProcessorService.stationsService.getNearestInterstellarFactors(refId, PadSize.L) >> stations
+
+    and: 'Cache entry is retrieved and saved'
+    1 * requestProcessorService.cacheService.getEntry(serviceRequest) >> null
+    1 * requestProcessorService.cacheService.saveEntry(serviceRequest, _ as String)
     0 * _
 
     and: 'Stations are returned'
@@ -82,13 +86,16 @@ class RequestProcessorServiceSpec extends Specification {
     1 * requestProcessorService.simpleRequestService.parseRequest(message) >> serviceRequest
     1 * requestProcessorService.systemsService.getSystemByName('HIP 8561') >> refSystem
     1 * requestProcessorService.stationsService.getNearestInterstellarFactors(refId, PadSize.L) >> stations
+
+    and: 'Cache entry is retrieved and saved'
+    1 * requestProcessorService.cacheService.getEntry(serviceRequest) >> null
+    1 * requestProcessorService.cacheService.saveEntry(serviceRequest, _ as String)
     0 * _
 
     and: 'Stations are returned'
     response =~ /Alpha/
     response =~ /Bravo/
   }
-
 
   void 'Process a request to find a system'() {
 
@@ -118,6 +125,10 @@ class RequestProcessorServiceSpec extends Specification {
     1 * requestProcessorService.simpleRequestService.parseRequest(message) >> serviceRequest
     1 * requestProcessorService.systemsService.getSystemByName('HIP 8561') >> refSystem
     1 * requestProcessorService.systemsService.findSystems(serviceRequest.systemCriteria) >> systems
+
+    and: 'Cache entry is retrieved and saved'
+    1 * requestProcessorService.cacheService.getEntry(serviceRequest) >> null
+    1 * requestProcessorService.cacheService.saveEntry(serviceRequest, _ as String)
     0 * _
 
     and: 'System is returned'
@@ -151,6 +162,10 @@ class RequestProcessorServiceSpec extends Specification {
     then:
     1 * requestProcessorService.simpleRequestService.parseRequest(message) >> serviceRequest
     1 * requestProcessorService.systemsService.getSystemByName('maya') >> responseSystem
+
+    and: 'Cache entry is retrieved and saved'
+    1 * requestProcessorService.cacheService.getEntry(serviceRequest) >> null
+    1 * requestProcessorService.cacheService.saveEntry(serviceRequest, _ as String)
     0 * _
 
     and: 'System is returned'
@@ -178,6 +193,10 @@ class RequestProcessorServiceSpec extends Specification {
     1 * requestProcessorService.simpleRequestService.parseRequest(message) >> serviceRequest
     1 * requestProcessorService.systemsService.getSystemByName('alpha', true) >> systems[0]
     1 * requestProcessorService.systemsService.getSystemByName('sol', true) >> systems[1]
+
+    and: 'Cache entry is retrieved and saved'
+    1 * requestProcessorService.cacheService.getEntry(serviceRequest) >> null
+    1 * requestProcessorService.cacheService.saveEntry(serviceRequest, _ as String)
     0 * _
 
     and: 'Distance is returned'
@@ -204,6 +223,10 @@ class RequestProcessorServiceSpec extends Specification {
     1 * requestProcessorService.simpleRequestService.parseRequest(message) >> serviceRequest
     1 * requestProcessorService.systemsService.getSystemByName('alpha', true) >> null
     1 * requestProcessorService.systemsService.getSystemByName('sol', true) >> systems[1]
+
+    and: 'Cache entry is retrieved and saved'
+    1 * requestProcessorService.cacheService.getEntry(serviceRequest) >> null
+    1 * requestProcessorService.cacheService.saveEntry(serviceRequest, _ as String)
     0 * _
 
     and: 'Error is returned'

@@ -8,7 +8,7 @@ class ServiceRequest {
   ActionType actionType
   ResourceType resourceType
 
-  Tuple2<String, String> systemPair
+  List<String> systemPair
 
   SystemCriteria systemCriteria = new SystemCriteria()
 

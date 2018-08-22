@@ -4,7 +4,6 @@ import groovy.util.logging.Slf4j
 import org.javacord.api.DiscordApi
 import org.javacord.api.DiscordApiBuilder
 import org.javacord.api.entity.channel.ChannelType
-import org.javacord.api.entity.channel.PrivateChannel
 import org.javacord.api.entity.user.User
 import org.javacord.api.event.message.MessageCreateEvent
 import org.jorgetrujillo.elitebot.domain.Sender
@@ -28,8 +27,8 @@ class Application implements CommandLineRunner {
   @Value('${discord.token:#{null}}')
   String discordToken
 
-  @Value('${discord.client_id:#{null}}')
-  Long clientId
+  @Value('${discord.log_user_id:#{null}}')
+  Long logUserId
 
   @Value('${discord.log_channel_id:#{null}}')
   Long logChannelId
@@ -37,11 +36,18 @@ class Application implements CommandLineRunner {
   @Override
   void run(String... args) {
 
-    if (discordToken && clientId) {
+    if (discordToken) {
       log.info('Starting up Elite Bot...')
       DiscordApi api = new DiscordApiBuilder().setToken(discordToken).login().join()
 
-      // Add a listener which answers with "Pong!" if someone writes "!ping"
+      // Get ID and other state vars
+      long selfId = api.getYourself().id
+      User logUser
+      if (logUserId) {
+        logUser = api.getUserById(logUserId).get()
+      }
+
+      // Listen for messages
       api.addMessageCreateListener { MessageCreateEvent event ->
 
         MDC.put('request_id', UUID.randomUUID().toString())
@@ -53,8 +59,8 @@ class Application implements CommandLineRunner {
 
         // Only process message if I was mentioned, or if in private channel
         boolean isPrivateChannel = (event.message.channel.type == ChannelType.PRIVATE_CHANNEL)
-        if (sender.clientId != api.getYourself().id &&
-            (event.message.mentionedUsers.find { it.id == clientId } || isPrivateChannel)) {
+        if (sender.clientId != selfId &&
+            (event.message.mentionedUsers.find { it.id == selfId } || isPrivateChannel)) {
 
           // Print an ack message
           event.getChannel().sendMessage("I'll see if I can help with that ${event.message.author.name}...")
@@ -70,16 +76,11 @@ class Application implements CommandLineRunner {
             User messageAuthor = event.message.userAuthor.orElse(null)
             String mention = (messageAuthor && !isPrivateChannel) ? messageAuthor.mentionTag : ''
             event.getChannel().sendMessage(mention + response)
+
+            // Send a log message to me
+            logMessage(logUser, sender, event.getMessage().getContent(), response)
           }
 
-          // Send a log message to me
-          if (logChannelId) {
-            PrivateChannel privateChannel = api.getPrivateChannelById(logChannelId).orElse(null)
-            privateChannel?.sendMessage(
-                "**Request**: ${event.getMessage().getContent().replaceAll(/@[^\s]+/, '')}\n" +
-                    "**Response**: ${response}"
-            )
-          }
         }
       }
 
@@ -87,6 +88,15 @@ class Application implements CommandLineRunner {
       log.info("You can invite the bot by using the following url: ${api.createBotInvite()}")
     } else {
       log.error('Required discord token and client ID were not provided!')
+    }
+  }
+
+  private void logMessage(User logUser, Sender sender, String message, String response) {
+
+    if (logUser) {
+      String logEntry = "**Request from ${sender.name}**: ${message.replaceAll(/@[^\s]+/, '')}\n" +
+          "**Response**: ${response}"
+      logUser.openPrivateChannel().get().sendMessage(logEntry)
     }
   }
 

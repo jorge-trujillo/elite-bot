@@ -205,7 +205,8 @@ class RequestProcessorService {
       stringBuilder.append(' * **Find systems** -> **find**: system **near**: hurukuntak ' +
           '*pad*: L *allegiance*: empire *security*: high *power*: aisling C\n')
       stringBuilder.append(' * **System details** -> **system**: sol\n')
-      stringBuilder.append(' * **Find interstellar factors** -> **find**: interstellar factors **near**: sol *pad*: L\n')
+      stringBuilder.append(' * **Find interstellar factors** -> ' +
+          '**find**: interstellar factors **near**: sol *pad*: L\n')
       stringBuilder.append(' * **Find distance** -> **distance**: sol **to**: maya\n')
       stringBuilder.append('More coming soon!\n')
     }
