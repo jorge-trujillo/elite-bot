@@ -11,9 +11,9 @@ buildscript {
     // compile dependencies
     groovyVersion = '2.4.14'
     springBootVersion = '2.0.4.RELEASE'
-    coreNLPVersion = '3.9.1'
     jsoupVersion = '1.11.3'
     jacksonVersion = '2.9.6'
+    apacheCommons = '3.7'
 
     // test dependencies
     cglibVersion = '3.2.4'
@@ -59,8 +59,7 @@ dependencies {
 
   compile "org.jsoup:jsoup:${jsoupVersion}"
 
-  compile "edu.stanford.nlp:stanford-corenlp:${coreNLPVersion}"
-  compile "edu.stanford.nlp:stanford-corenlp:${coreNLPVersion}:models-english"
+  compile "org.apache.commons:commons-lang3:${apacheCommons}"
 
   // jackson support for Java 8 date & time API
   compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"

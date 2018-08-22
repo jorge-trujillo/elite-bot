@@ -23,6 +23,9 @@ class RequestProcessorService {
   @Autowired
   SimpleRequestService simpleRequestService
 
+  @Autowired
+  ServiceRequestCacheService cacheService
+
   String processMessage(String message) {
 
     try {
@@ -36,7 +39,11 @@ class RequestProcessorService {
       }
 
       // At this point, the request should be solid. Execute
-      String response
+      String response = cacheService.getEntry(serviceRequest)
+      if (response) {
+        return response
+      }
+
       switch (serviceRequest.actionType) {
         case ServiceRequest.ActionType.FIND:
           response = executeFindRequest(serviceRequest)
@@ -51,6 +58,7 @@ class RequestProcessorService {
           response = generateHelpMessage()
       }
 
+      cacheService.saveEntry(serviceRequest, response)
       return response
     }
     catch (Exception e) {
@@ -166,15 +174,16 @@ class RequestProcessorService {
 
   private String computeDistance(ServiceRequest serviceRequest) {
 
-    List<System> systems = [
-        systemsService.getSystemByName(serviceRequest.systemPair.first, true),
-        systemsService.getSystemByName(serviceRequest.systemPair.second, true)
-    ]
+    List<System> systems = serviceRequest.systemPair.collect { String value ->
+      return systemsService.getSystemByName(value, true)
+    }
 
-    systems.eachWithIndex { System system, int index ->
-      if (!system) {
-        return "I could not locate the system ${serviceRequest.systemPair[index]}!"
-      }
+    int badIndex = systems.findIndexOf { System system ->
+      return !system
+    }
+    if (badIndex >= 0) {
+      return "I could not locate the requested system **${serviceRequest.systemPair[badIndex]}**! " +
+          'Are you sure you typed it correctly?'
     }
 
     double distance = Math.sqrt(Math.pow(systems[0].x - systems[1].x, 2) + Math.pow(systems[0].y - systems[1].y, 2) +
@@ -193,11 +202,12 @@ class RequestProcessorService {
     } else {
       stringBuilder.append('You need help and you got it! Here is what I can do... ' +
           'quick note is that **bold** fields are required: \n')
-      stringBuilder.append(' - *Find systems*: **find**: system **near**: hurukuntak ' +
+      stringBuilder.append(' * **Find systems** -> **find**: system **near**: hurukuntak ' +
           '*pad*: L *allegiance*: empire *security*: high *power*: aisling C\n')
-      stringBuilder.append(' - *System details*: **system**: sol\n')
-      stringBuilder.append(' - *Find interstellar factors*: **find**: interstellar factors **near**: sol *pad*: L\n')
-      stringBuilder.append(' - *Find distance*: **distance**: sol **to**: maya\n')
+      stringBuilder.append(' * **System details** -> **system**: sol\n')
+      stringBuilder.append(' * **Find interstellar factors** -> ' +
+          '**find**: interstellar factors **near**: sol *pad*: L\n')
+      stringBuilder.append(' * **Find distance** -> **distance**: sol **to**: maya\n')
       stringBuilder.append('More coming soon!\n')
     }
 

@@ -1,0 +1,13 @@
+version: '2'
+services:
+  java-app:
+    image: jtrujillo/elite-bot:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      APP_PROPERTIES_FILE: application-local.yml
+      PROPERTIES_FILE: /apps/install/acorn/application-override.yml
+      SPRING_OPTS: --spring.profiles.active=local
+    volumes:
+      - ~/git/jorge-trujillo/elite-bot/src/main/resources/application-local.yaml:/apps/install/acorn/application-override.yml:ro

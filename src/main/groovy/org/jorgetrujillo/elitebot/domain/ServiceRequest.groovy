@@ -1,11 +1,14 @@
 package org.jorgetrujillo.elitebot.domain
 
+import groovy.transform.EqualsAndHashCode
+
+@EqualsAndHashCode
 class ServiceRequest {
 
   ActionType actionType
   ResourceType resourceType
 
-  Tuple2<String, String> systemPair
+  List<String> systemPair
 
   SystemCriteria systemCriteria = new SystemCriteria()
 

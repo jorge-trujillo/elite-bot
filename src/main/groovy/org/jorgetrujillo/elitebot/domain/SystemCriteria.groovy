@@ -1,11 +1,13 @@
 package org.jorgetrujillo.elitebot.domain
 
+import groovy.transform.EqualsAndHashCode
 import org.jorgetrujillo.elitebot.domain.elite.Allegiance
 import org.jorgetrujillo.elitebot.domain.elite.PadSize
 import org.jorgetrujillo.elitebot.domain.elite.PowerEffect
 import org.jorgetrujillo.elitebot.domain.elite.PowerType
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 
+@EqualsAndHashCode
 class SystemCriteria {
 
   String referenceSystemName
