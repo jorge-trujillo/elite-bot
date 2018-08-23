@@ -32,7 +32,7 @@ class EddbStationsClientIntegrationSpec extends IntegrationTestBase {
     stations[0].url != null
     !stations[0].planetary
     stations[0].landingPad == PadSize.L
-    stations[0].distanceFromStarLs == 328
+    stations[0].distanceFromStarLs == 327
 
     stations[0].systemName == 'Shinrarta Dezhra'
 
@@ -65,6 +65,7 @@ class EddbStationsClientIntegrationSpec extends IntegrationTestBase {
     stations[0].allegiance == Allegiance.EMPIRE
     stations[0].distanceFromStarLs == 17
     stations[0].distanceFromRefLy == 0
+    stations[0].landingPad == PadSize.L
 
     stations[0].systemName == 'Hurukuntak'
     stations[0].systemId == '9608'
@@ -77,6 +78,7 @@ class EddbStationsClientIntegrationSpec extends IntegrationTestBase {
     stations[1].allegiance == Allegiance.EMPIRE
     stations[1].distanceFromStarLs == 170186
     stations[1].distanceFromRefLy == 0
+    stations[1].landingPad == PadSize.L
 
     stations[1].systemName == 'Hurukuntak'
     stations[1].systemId == '9608'

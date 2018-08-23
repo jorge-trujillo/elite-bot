@@ -1,7 +1,7 @@
 package org.jorgetrujillo.elitebot.clients.eddb
 
 import groovy.util.logging.Slf4j
-import org.apache.commons.lang3.StringUtils
+import org.apache.commons.text.similarity.LevenshteinDistance
 import org.jorgetrujillo.elitebot.clients.GenericClient
 import org.jorgetrujillo.elitebot.clients.GenericRequest
 import org.jorgetrujillo.elitebot.clients.GenericResponse
@@ -36,6 +36,8 @@ class EddbStationsClient implements StationsClient {
 
   @Autowired
   GenericClient genericClient
+
+  LevenshteinDistance levenshteinDistance = LevenshteinDistance.getDefaultInstance()
 
   List<Station> findStationsByName(String name) {
 
@@ -91,6 +93,7 @@ class EddbStationsClient implements StationsClient {
       List<Element> columns = element.select('td')
 
       station.url = "${EDDB_HOST}${columns[0].selectFirst('a').attr('href')}"
+
       station.name = columns[0].selectFirst('a').text()
 
       if (columns[0].selectFirst('i[title]') &&
@@ -110,7 +113,7 @@ class EddbStationsClient implements StationsClient {
       String allegiance = columns[2].text()
       if (allegiance) {
         Allegiance foundAllegiance = Allegiance.values().find {
-          return StringUtils.getLevenshteinDistance(it.toString().toLowerCase(), allegiance.toLowerCase()) <= 2
+          return levenshteinDistance.apply(it.toString().toLowerCase(), allegiance.toLowerCase()) <= 2
         }
         if (foundAllegiance) {
           station.allegiance = foundAllegiance
@@ -120,9 +123,9 @@ class EddbStationsClient implements StationsClient {
       // Match pad size
       String padSize = columns[3].text()
       if (padSize == 'L') {
-        station.landingPad == PadSize.L
+        station.landingPad = PadSize.L
       } else {
-        station.landingPad == PadSize.M
+        station.landingPad = PadSize.M
       }
 
       // Get distance from star
@@ -143,7 +146,7 @@ class EddbStationsClient implements StationsClient {
     return stations
   }
 
-  private Map<String, String> buildFormParams(StationCriteria searchRequest) {
+  static private Map<String, String> buildFormParams(StationCriteria searchRequest) {
     Map<String, String> formParams = [:]
 
     // Add form params
