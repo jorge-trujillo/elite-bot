@@ -106,8 +106,9 @@ class RequestProcessorService {
   private String createFindSystemsResponse(List<System> systems) {
     StringBuilder response = new StringBuilder()
 
-    response.append('Here are 5 matching systems:\n')
-    systems.subList(0, Math.min(5, systems.size())).each {
+    int numResults = Math.min(5, systems.size())
+    response.append("Here are ${numResults} matching systems:\n")
+    systems.subList(0, numResults).each {
 
       String powerDesc = ''
       if (it.powerType && it.powerEffect) {
@@ -142,13 +143,24 @@ class RequestProcessorService {
       !(it in filteredList)
     })
 
-    response.append('Here are 3 matching stations:\n')
-    filteredList.subList(0, Math.min(3, filteredList.size())).each {
-      response.append(" * **${it.name}** in the **${it.systemName}** system - ${it.distanceFromRefLy} ly from you " +
-          "and ${it.distanceFromStarLs} ls from the star\n")
+    int numResults = Math.min(5, filteredList.size())
+    response.append("Here are ${numResults} matching stations:\n")
+    filteredList.subList(0, numResults).each {
+      response.append(" * ${renderStation(it, true)}\n")
     }
 
     return response.toString()
+  }
+
+  private String renderStation(Station station,
+                               boolean relativeDistance) {
+    String stationType = station.planetary ? 'planetary' : 'orbital'
+    String padSize = "${station.landingPad} pads, "
+    String distance = station.distanceFromRefLy ?
+        " and ${station.distanceFromRefLy} ly from ${relativeDistance ? 'you' : 'sol'}" : ''
+
+    return "**${station.name}** in **${station.systemName}** - ${stationType} station, " + padSize +
+        "${station.distanceFromStarLs} ls from the star" + distance
   }
 
   private String getSystemInfo(ServiceRequest serviceRequest) {
@@ -164,10 +176,9 @@ class RequestProcessorService {
         ?.sort { a, b -> a.distanceFromStarLs <=> b.distanceFromStarLs }
         ?.each { Station station ->
 
-      response.append(" * **${station.name}** - ${station.distanceFromStarLs} ls from the star " +
-          "and has a ${station.landingPad} pad\n")
+      response.append(" * ${renderStation(station, false)}\n")
     }
-    response.append("You can also check out ${referenceSystem.url} to see more")
+    response.append("You can also check out ${referenceSystem.url} to see more.")
 
     return response.toString()
   }

@@ -1,6 +1,6 @@
 logs
 /classes
-application-local.yml
+application-local*
 
 # Created by https://www.gitignore.io/api/java,macos,gradle,intellij,intellij+iml,intellij+all
 

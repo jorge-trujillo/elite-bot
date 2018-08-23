@@ -1,6 +1,5 @@
 package org.jorgetrujillo.elitebot.services
 
-import org.apache.commons.lang3.StringUtils
 import org.jorgetrujillo.elitebot.domain.ServiceRequest
 import org.jorgetrujillo.elitebot.domain.elite.Allegiance
 import org.jorgetrujillo.elitebot.domain.elite.PadSize
@@ -9,6 +8,7 @@ import org.jorgetrujillo.elitebot.domain.elite.PowerType
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.exceptions.SimpleRequestField
 import org.jorgetrujillo.elitebot.exceptions.SimpleRequestParseException
+import org.jorgetrujillo.elitebot.utils.TextUtils
 import org.springframework.stereotype.Service
 
 @Service
@@ -235,6 +235,6 @@ class SimpleRequestService {
   }
 
   private static int measureDistance(String one, String two) {
-    StringUtils.getLevenshteinDistance(one, two)
+    TextUtils.getLevenshteinDistance(one, two)
   }
 }

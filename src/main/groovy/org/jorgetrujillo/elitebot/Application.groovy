@@ -75,7 +75,7 @@ class Application implements CommandLineRunner {
           if (response) {
             User messageAuthor = event.message.userAuthor.orElse(null)
             String mention = (messageAuthor && !isPrivateChannel) ? messageAuthor.mentionTag : ''
-            event.getChannel().sendMessage(mention + response)
+            event.getChannel().sendMessage(mention + ' ' + response)
 
             // Send a log message to me
             logMessage(logUser, sender, event.getMessage().getContent(), response)
@@ -94,7 +94,8 @@ class Application implements CommandLineRunner {
   private void logMessage(User logUser, Sender sender, String message, String response) {
 
     if (logUser) {
-      String logEntry = "**Request from ${sender.name}**: ${message.replaceAll(/@[^\s]+/, '')}\n" +
+      String logEntry = "**Request from ${sender.name}**: \n" +
+          "```${message.replaceAll(/@[^\s]+/, '')}```\n" +
           "**Response**: ${response}"
       logUser.openPrivateChannel().get().sendMessage(logEntry)
     }

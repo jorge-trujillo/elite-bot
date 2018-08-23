@@ -55,5 +55,6 @@ class EddbSystemsClientSpec extends Specification {
     actual[0].name == 'Maya'
     actual[0].stations[0].id == '101'
     actual[0].stations[0].name == 'Station 1'
+    actual[0].stations[0].systemName == 'Maya'
   }
 }

@@ -1,7 +1,6 @@
 package org.jorgetrujillo.elitebot.clients.eddb
 
 import groovy.util.logging.Slf4j
-import org.apache.commons.lang3.StringUtils
 import org.jorgetrujillo.elitebot.clients.GenericClient
 import org.jorgetrujillo.elitebot.clients.GenericRequest
 import org.jorgetrujillo.elitebot.clients.GenericResponse
@@ -15,6 +14,7 @@ import org.jorgetrujillo.elitebot.domain.elite.PowerType
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.Station
 import org.jorgetrujillo.elitebot.domain.elite.System
+import org.jorgetrujillo.elitebot.utils.TextUtils
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -44,8 +44,6 @@ class EddbSystemsClient implements SystemsClient {
   @Autowired
   GenericClient genericClient
 
-  // Session info
-
   List<System> findSystemsByName(String name) {
 
     List<System> systems = []
@@ -73,7 +71,11 @@ class EddbSystemsClient implements SystemsClient {
               name: it.name,
               url: "${EDDB_HOST}/station/${it.id}",
               landingPad: it.maxLandingPadSize ? PadSize.valueOf(it.maxLandingPadSize) : null,
-              distanceFromStarLs: it.distanceToStar
+              distanceFromStarLs: it.distanceToStar,
+              allegiance: it.allegiance ? parseAllegiance(it.allegiance) : null,
+              planetary: it.isPlanetary,
+              systemName: systemResult.name,
+              systemId: systemResult.id as String,
           )
         }
 
@@ -232,7 +234,7 @@ class EddbSystemsClient implements SystemsClient {
 
   static Allegiance parseAllegiance(String text) {
     Allegiance foundAllegiance = Allegiance.values().find { Allegiance allegiance ->
-      return StringUtils.getLevenshteinDistance(allegiance.toString().toLowerCase(), text.toLowerCase()) <= 2
+      return TextUtils.getLevenshteinDistance(allegiance.toString().toLowerCase(), text.toLowerCase()) <= 2
     }
 
     return foundAllegiance
@@ -240,7 +242,7 @@ class EddbSystemsClient implements SystemsClient {
 
   static SecurityLevel parseSecurityLevel(String text) {
     SecurityLevel foundLevel = SecurityLevel.values().find { SecurityLevel securityLevel ->
-      return StringUtils.getLevenshteinDistance(securityLevel.toString().toLowerCase(), text.toLowerCase()) <= 2
+      return TextUtils.getLevenshteinDistance(securityLevel.toString().toLowerCase(), text.toLowerCase()) <= 2
     }
 
     return foundLevel
