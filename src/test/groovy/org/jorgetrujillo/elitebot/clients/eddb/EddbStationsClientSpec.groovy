@@ -32,8 +32,7 @@ class EddbStationsClientSpec extends Specification {
                 maxLandingPadSize: 'L',
                 distanceToStar: 100,
                 faction: 'Faction',
-                isPlanetary: true,
-                typeId: 1,
+                typeId: 16,
                 allegiance: 'Empire',
                 system: new EddbStationResult.SystemSummary(
                     name: 'Hurukuntak',
