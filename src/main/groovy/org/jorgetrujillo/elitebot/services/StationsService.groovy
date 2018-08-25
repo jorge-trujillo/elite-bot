@@ -3,8 +3,11 @@ package org.jorgetrujillo.elitebot.services
 import groovy.util.logging.Slf4j
 import org.jorgetrujillo.elitebot.clients.StationsClient
 import org.jorgetrujillo.elitebot.clients.SystemsClient
+import org.jorgetrujillo.elitebot.clients.inara.InaraMaterialTradersClient
+import org.jorgetrujillo.elitebot.clients.inara.domain.MaterialTraderResult
 import org.jorgetrujillo.elitebot.domain.StationCriteria
 import org.jorgetrujillo.elitebot.domain.SystemCriteria
+import org.jorgetrujillo.elitebot.domain.elite.MaterialTraderType
 import org.jorgetrujillo.elitebot.domain.elite.PadSize
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.Station
@@ -22,9 +25,25 @@ class StationsService {
   @Autowired
   StationsClient stationsClient
 
-  Station getStationByName(String name) {
+  @Autowired
+  InaraMaterialTradersClient materialTradersClient
+
+  Station getStationByName(String name, String systemName = null) {
     List<Station> stations = stationsClient.findStationsByName(name)
-    return stations ? stations.first() : null
+    if (!stations) {
+      return null
+    }
+
+    Station selectedStation = stations.find {
+      if (systemName && it.systemName) {
+        return it.name.equalsIgnoreCase(name) && it.systemName.equalsIgnoreCase(systemName)
+      }
+
+      // Return the first one
+      return true
+    }
+
+    return selectedStation
   }
 
   List<Station> findStations(StationCriteria stationCriteria) {
@@ -59,5 +78,36 @@ class StationsService {
     }
 
     return compliantStations
+  }
+
+  List<Station> getNearestMaterialTraders(String referenceSystemName) {
+
+    List<Station> matTraderStations
+
+    // Get mat traders
+    List<MaterialTraderResult> matTraders = materialTradersClient.getMaterialTradersNear(referenceSystemName)
+
+    // Get the closest stations that are within 2kls
+    List<MaterialTraderResult> bestResults = MaterialTraderType.values().collect {
+      MaterialTraderType materialTraderType ->
+        MaterialTraderResult materialTraderResult = matTraders.find {
+          it.distanceFromStarLs <= 2000 && it.materialTraderType == materialTraderType
+        }
+        return materialTraderResult ?: matTraders.find { it.materialTraderType == materialTraderType }
+
+    }.findAll()
+
+    // Fill in remaining details and return them
+    matTraderStations = bestResults.collect {
+      Station station = getStationByName(it.stationName, it.systemName)
+
+      station?.materialTrader = it.materialTraderType
+      station?.distanceFromStarLs = it.distanceFromStarLs
+      station?.distanceFromRefLy = it.distanceFromRefSystemLy
+
+      return station
+    }.findAll()
+
+    return matTraderStations
   }
 }

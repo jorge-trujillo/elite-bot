@@ -96,6 +96,14 @@ class RequestProcessorService {
         }
         break
 
+      case ServiceRequest.ResourceType.MATERIAL_TRADER:
+        List<Station> stations = stationsService.getNearestMaterialTraders(referenceSystem.name)
+
+        if (stations) {
+          response = createFindStationsResponse(stations)
+        }
+        break
+
       default:
         response = "I can't really help yet with finding a ${serviceRequest.resourceType.name()}!"
     }
@@ -156,10 +164,12 @@ class RequestProcessorService {
                                boolean relativeDistance) {
     String stationType = station.planetary ? 'planetary' : 'orbital'
     String padSize = "${station.landingPad} pads, "
+    String matTrader = station.materialTrader ?
+        "**${station.materialTrader.toString().toLowerCase()}** mat trader, " : ''
     String distance = station.distanceFromRefLy ?
         " and ${station.distanceFromRefLy} ly from ${relativeDistance ? 'you' : 'sol'}" : ''
 
-    return "**${station.name}** in **${station.systemName}** - ${stationType} station, " + padSize +
+    return "**${station.name}** in **${station.systemName}** - ${stationType} station, " + padSize + matTrader +
         "${station.distanceFromStarLs} ls from the star" + distance
   }
 
