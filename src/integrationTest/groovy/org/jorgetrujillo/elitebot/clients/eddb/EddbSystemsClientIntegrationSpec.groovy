@@ -1,7 +1,6 @@
-package org.jorgetrujillo.elitebot.clients
+package org.jorgetrujillo.elitebot.clients.eddb
 
 import org.jorgetrujillo.elitebot.IntegrationTestBase
-import org.jorgetrujillo.elitebot.clients.eddb.EddbSystemsClient
 import org.jorgetrujillo.elitebot.domain.SystemCriteria
 import org.jorgetrujillo.elitebot.domain.elite.Allegiance
 import org.jorgetrujillo.elitebot.domain.elite.PadSize

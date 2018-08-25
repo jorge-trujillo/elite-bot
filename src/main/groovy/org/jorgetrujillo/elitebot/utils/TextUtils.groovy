@@ -9,4 +9,8 @@ class TextUtils {
   static int getLevenshteinDistance(String first, String second) {
     return LEVENSHTEIN_DISTANCE.apply(first, second)
   }
+
+  static boolean underThreshold(String first, String second, int threshold) {
+    return getLevenshteinDistance(first, second) < threshold
+  }
 }

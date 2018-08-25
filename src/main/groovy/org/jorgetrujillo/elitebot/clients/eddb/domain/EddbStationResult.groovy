@@ -11,7 +11,11 @@ class EddbStationResult {
   String faction
   int typeId
   String allegiance
-  boolean isPlanetary
+
+  // 15,14,13,16,17 are Planetary
+  boolean isPlanetary() {
+    return typeId in [15, 14, 13, 16, 17]
+  }
 
   SystemSummary system
 

@@ -19,7 +19,8 @@ class ServiceRequest {
   enum ResourceType {
     SYSTEM(['system']),
     STATION(['station']),
-    INTERSTELLAR_FACTORS(['interstellar', 'factors'])
+    INTERSTELLAR_FACTORS(['interstellar', 'factors']),
+    MATERIAL_TRADER(['trader', 'mat trader'])
 
     List<String> terms
 

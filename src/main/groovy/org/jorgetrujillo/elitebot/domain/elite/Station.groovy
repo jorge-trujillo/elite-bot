@@ -12,6 +12,8 @@ class Station {
 
   boolean planetary
 
+  MaterialTraderType materialTrader
+
   // System name and ID
   String systemName
   String systemId

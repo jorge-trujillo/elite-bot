@@ -73,7 +73,7 @@ class EddbSystemsClient implements SystemsClient {
               landingPad: it.maxLandingPadSize ? PadSize.valueOf(it.maxLandingPadSize) : null,
               distanceFromStarLs: it.distanceToStar,
               allegiance: it.allegiance ? parseAllegiance(it.allegiance) : null,
-              planetary: it.isPlanetary,
+              planetary: it.planetary,
               systemName: systemResult.name,
               systemId: systemResult.id as String,
           )

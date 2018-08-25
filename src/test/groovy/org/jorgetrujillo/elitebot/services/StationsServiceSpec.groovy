@@ -2,8 +2,11 @@ package org.jorgetrujillo.elitebot.services
 
 import org.jorgetrujillo.elitebot.clients.StationsClient
 import org.jorgetrujillo.elitebot.clients.SystemsClient
+import org.jorgetrujillo.elitebot.clients.inara.InaraMaterialTradersClient
+import org.jorgetrujillo.elitebot.clients.inara.domain.MaterialTraderResult
 import org.jorgetrujillo.elitebot.domain.StationCriteria
 import org.jorgetrujillo.elitebot.domain.SystemCriteria
+import org.jorgetrujillo.elitebot.domain.elite.MaterialTraderType
 import org.jorgetrujillo.elitebot.domain.elite.PadSize
 import org.jorgetrujillo.elitebot.domain.elite.SecurityLevel
 import org.jorgetrujillo.elitebot.domain.elite.Station
@@ -17,7 +20,8 @@ class StationsServiceSpec extends Specification {
   void setup() {
     stationsService = new StationsService(
         systemsClient: Mock(SystemsClient),
-        stationsClient: Mock(StationsClient)
+        stationsClient: Mock(StationsClient),
+        materialTradersClient: Mock(InaraMaterialTradersClient)
     )
   }
 
@@ -82,7 +86,7 @@ class StationsServiceSpec extends Specification {
 
     then:
     1 * stationsService.systemsClient.findSystems({ SystemCriteria systemCriteria ->
-      assert  systemCriteria.referenceSystemId == referenceId
+      assert systemCriteria.referenceSystemId == referenceId
       assert systemCriteria.securityLevel == SecurityLevel.LOW
       assert systemCriteria.minPadSize == minSize
       return true
@@ -96,6 +100,63 @@ class StationsServiceSpec extends Specification {
     0 * _
 
     actual*.id == ['1a', '2a']
+  }
+
+  void 'Get material traders'() {
+    given:
+    String systemName = 'sierra'
+
+    List<MaterialTraderResult> results = [
+        new MaterialTraderResult(
+            stationName: 'Alpha',
+            systemName: 's1',
+            materialTraderType: MaterialTraderType.ENCODED,
+            distanceFromStarLs: 3000,
+            distanceFromRefSystemLy: 5
+        ),
+        new MaterialTraderResult(
+            stationName: 'Bravo',
+            systemName: 's2',
+            materialTraderType: MaterialTraderType.RAW,
+            distanceFromStarLs: 6000,
+            distanceFromRefSystemLy: 10
+        ),
+        new MaterialTraderResult(
+            stationName: 'Charlie',
+            systemName: 's3',
+            materialTraderType: MaterialTraderType.MANUFACTURED,
+            distanceFromStarLs: 50,
+            distanceFromRefSystemLy: 22
+        ),
+        new MaterialTraderResult(
+            stationName: 'Delta',
+            systemName: 's4',
+            materialTraderType: MaterialTraderType.ENCODED,
+            distanceFromStarLs: 200,
+            distanceFromRefSystemLy: 40
+        )
+    ]
+
+    when:
+    List<Station> actual = stationsService.getNearestMaterialTraders(systemName)
+
+    then:
+    1 * stationsService.materialTradersClient.getMaterialTradersNear(systemName) >> results
+    1 * stationsService.stationsClient.findStationsByName('Delta') >> [
+        new Station(id: 'd1', name: 'delta', systemName: 'other'),
+        new Station(id: 'd', name: 'delta', systemName: 's4')
+    ]
+    1 * stationsService.stationsClient.findStationsByName('Bravo') >> [new Station(id: 'b')]
+    1 * stationsService.stationsClient.findStationsByName('Charlie') >> [new Station(id: 'c')]
+    0 * _
+
+    and: 'Right systems returned'
+    actual*.id == ['b', 'c', 'd']
+
+    actual[0].id == 'b'
+    actual[0].distanceFromRefLy == 10
+    actual[0].distanceFromStarLs == 6000
+    !actual.any { !it.materialTrader }
 
   }
 }

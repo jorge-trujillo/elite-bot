@@ -177,7 +177,7 @@ class SimpleRequestService {
     PowerType powerType = PowerType.values().find { PowerType powerTypeVal ->
       List<String> powerNameTokens = Arrays.asList(powerTypeVal.powerName.toLowerCase().split(/[\s-_]+/))
       return powerNameTokens.find { String powerNameToken ->
-        return powerTokens.find { measureDistance(it, powerNameToken) <= 2 }
+        return powerTokens.find { TextUtils.underThreshold(it, powerNameToken, 3) }
       }
     }
     serviceRequest.systemCriteria.powerType = powerType
@@ -197,14 +197,21 @@ class SimpleRequestService {
     T foundValue = values.findResult { Tuple2<List<String>, T> value ->
 
       if (value.getFirst().find { String stringValue ->
-        return valueTokens.find {
+
+        boolean matchAsWhole = fuzzy ?
+            TextUtils.underThreshold(valueTokens.join(' ').toLowerCase(), stringValue.toLowerCase(), 3) :
+            valueTokens.join(' ').toLowerCase() == stringValue.toLowerCase()
+
+        return matchAsWhole || valueTokens.find {
           if (fuzzy) {
-            return measureDistance(it.toLowerCase(), stringValue.toLowerCase()) <= 2
+            return TextUtils.underThreshold(it.toLowerCase(), stringValue.toLowerCase(), 3) ||
+                TextUtils.underThreshold(it.toLowerCase(), stringValue.toLowerCase(), 3)
           }
 
           // Straight match if not fuzzy
           return it.toLowerCase() == stringValue.toLowerCase()
         }
+
       }) {
         return value.getSecond()
       }
@@ -234,7 +241,4 @@ class SimpleRequestService {
     return matchingTokens
   }
 
-  private static int measureDistance(String one, String two) {
-    TextUtils.getLevenshteinDistance(one, two)
-  }
 }

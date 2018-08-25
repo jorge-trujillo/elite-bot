@@ -65,7 +65,7 @@ class EddbStationsClient implements StationsClient {
             url: "${EDDB_HOST}/station/${stationResult.id}",
             landingPad: PadSize.valueOf(stationResult.maxLandingPadSize),
             distanceFromStarLs: stationResult.distanceToStar,
-            planetary: stationResult.isPlanetary,
+            planetary: stationResult.planetary,
             systemName: stationResult.system.name
         )
 

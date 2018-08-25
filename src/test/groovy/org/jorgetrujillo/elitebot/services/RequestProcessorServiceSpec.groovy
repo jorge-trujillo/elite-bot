@@ -2,6 +2,7 @@ package org.jorgetrujillo.elitebot.services
 
 import org.jorgetrujillo.elitebot.domain.ServiceRequest
 import org.jorgetrujillo.elitebot.domain.SystemCriteria
+import org.jorgetrujillo.elitebot.domain.elite.MaterialTraderType
 import org.jorgetrujillo.elitebot.domain.elite.PadSize
 import org.jorgetrujillo.elitebot.domain.elite.PowerType
 import org.jorgetrujillo.elitebot.domain.elite.Station
@@ -231,5 +232,44 @@ class RequestProcessorServiceSpec extends Specification {
 
     and: 'Error is returned'
     response =~ /alpha/
+  }
+
+  void 'Process request to find material traders'() {
+
+    given:
+    String message = 'find: mat trader near: HIP 8561'
+
+    String refId = 'id'
+    System refSystem = new System(name: 'HIP 8561', id: refId)
+
+    ServiceRequest serviceRequest = new ServiceRequest(
+        actionType: ServiceRequest.ActionType.FIND,
+        resourceType: ServiceRequest.ResourceType.MATERIAL_TRADER,
+        systemCriteria: new SystemCriteria(
+            referenceSystemName: 'HIP 8561'
+        )
+    )
+
+    List<Station> stations = [
+        new Station(name: 'Alpha', id: '1', materialTrader: MaterialTraderType.ENCODED, distanceFromStarLs: 10, distanceFromRefLy: 100),
+        new Station(name: 'Bravo', id: '2', materialTrader: MaterialTraderType.RAW, distanceFromStarLs: 20, distanceFromRefLy: 200),
+    ]
+
+    when:
+    String response = requestProcessorService.processMessage(message)
+
+    then:
+    1 * requestProcessorService.systemsService.getSystemByName('HIP 8561') >> refSystem
+    1 * requestProcessorService.simpleRequestService.parseRequest(message) >> serviceRequest
+    1 * requestProcessorService.stationsService.getNearestMaterialTraders('HIP 8561') >> stations
+
+    and: 'Cache entry is retrieved and saved'
+    1 * requestProcessorService.cacheService.getEntry(serviceRequest) >> null
+    1 * requestProcessorService.cacheService.saveEntry(serviceRequest, _ as String)
+
+    response =~ /Alpha/
+    response =~ /encoded/
+    response =~ /Bravo/
+    response =~ /raw/
   }
 }

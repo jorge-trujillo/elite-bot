@@ -14,6 +14,7 @@ import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ActionType.COMPUT
 import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ActionType.FIND
 import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ActionType.SYSTEM_DETAILS
 import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ResourceType.INTERSTELLAR_FACTORS
+import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ResourceType.MATERIAL_TRADER
 import static org.jorgetrujillo.elitebot.domain.ServiceRequest.ResourceType.SYSTEM
 
 class SimpleRequestServiceSpec extends Specification {
@@ -79,6 +80,33 @@ class SimpleRequestServiceSpec extends Specification {
     'find: interstellar factors near: hurukuntak'      | FIND       | INTERSTELLAR_FACTORS | 'hurukuntak'   | null      | null       | null     | null      | null
     'find:interstellar near:hurukuntak'                | FIND       | INTERSTELLAR_FACTORS | 'hurukuntak'   | null      | null       | null     | null      | null
     'find: interstellar factors near: HIP 8225 pad: L' | FIND       | INTERSTELLAR_FACTORS | 'HIP 8225'     | PadSize.L | null       | null     | null      | null
+  }
+
+  @Unroll
+  void 'Parse a mat trader request for: #text'() {
+
+    when:
+    ServiceRequest serviceRequest = simpleRequestService.parseRequest(text)
+
+    then:
+    serviceRequest.actionType == actionType
+    serviceRequest.resourceType == resourceType
+
+    SystemCriteria systemCriteria = serviceRequest.systemCriteria
+    systemCriteria.referenceSystemName.equalsIgnoreCase(referencePoint)
+    systemCriteria.minPadSize == pad
+    systemCriteria.allegiance == allegiance
+    systemCriteria.securityLevel == security
+    systemCriteria.powerType == powerType
+    systemCriteria.powerEffect == powerEffect
+
+    where:
+    text                                   | actionType | resourceType    | referencePoint | pad  | allegiance | security | powerType | powerEffect
+    'find: mat trader near: hurukuntak'    | FIND       | MATERIAL_TRADER | 'hurukuntak'   | null | null       | null     | null      | null
+    'find:mat traders near:hurukuntak'     | FIND       | MATERIAL_TRADER | 'hurukuntak'   | null | null       | null     | null      | null
+    'find: material trader near: HIP 8225' | FIND       | MATERIAL_TRADER | 'HIP 8225'     | null | null       | null     | null      | null
+    'find: trader near: HIP 8225'          | FIND       | MATERIAL_TRADER | 'HIP 8225'     | null | null       | null     | null      | null
+
   }
 
   @Unroll
