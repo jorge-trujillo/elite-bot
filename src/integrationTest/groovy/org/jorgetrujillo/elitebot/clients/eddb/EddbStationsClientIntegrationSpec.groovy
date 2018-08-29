@@ -31,7 +31,7 @@ class EddbStationsClientIntegrationSpec extends IntegrationTestBase {
     stations[0].url != null
     !stations[0].planetary
     stations[0].landingPad == PadSize.L
-    stations[0].distanceFromStarLs == 327
+    stations[0].distanceFromStarLs == 326
 
     stations[0].systemName == 'Shinrarta Dezhra'
 

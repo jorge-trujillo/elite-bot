@@ -26,7 +26,7 @@ class InaraMaterialTradersClient {
         'searchgalaxy': systemName
     ]
     Document document = getPage("${HOST}/galaxy-nearest/25/4767/", params)
-    Elements rows = document.select('div.mainblock > table.subtable > tbody > tr')
+    Elements rows = document.select('div.mainblock > table > tbody > tr')
 
     /**
      * Get all mat traders nearby the station, as a list of MaterialTraderResult

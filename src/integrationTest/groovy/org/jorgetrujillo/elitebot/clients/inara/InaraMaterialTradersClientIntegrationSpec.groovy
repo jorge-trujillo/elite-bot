@@ -36,7 +36,7 @@ class InaraMaterialTradersClientIntegrationSpec extends IntegrationTestBase {
     matTraders[2].stationName == 'Griggs City'
     matTraders[2].materialTraderType == MaterialTraderType.MANUFACTURED
     matTraders[2].distanceFromRefSystemLy == 19.43
-    matTraders[2].distanceFromStarLs == 963
+    matTraders[2].distanceFromStarLs == 957
 
   }
 }
