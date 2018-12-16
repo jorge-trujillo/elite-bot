@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service
 @Slf4j
 class RequestProcessorService {
 
+  private static final int NUM_STATIONS = 12
+
   @Autowired
   SystemsService systemsService
 
@@ -114,7 +116,7 @@ class RequestProcessorService {
   private String createFindSystemsResponse(List<System> systems) {
     StringBuilder response = new StringBuilder()
 
-    int numResults = Math.min(5, systems.size())
+    int numResults = Math.min(NUM_STATIONS, systems.size())
     response.append("Here are ${numResults} matching systems:\n")
     systems.subList(0, numResults).each {
 
@@ -151,7 +153,7 @@ class RequestProcessorService {
       !(it in filteredList)
     })
 
-    int numResults = Math.min(5, filteredList.size())
+    int numResults = Math.min(NUM_STATIONS, filteredList.size())
     response.append("Here are ${numResults} matching stations:\n")
     filteredList.subList(0, numResults).each {
       response.append(" * ${renderStation(it, true)}\n")

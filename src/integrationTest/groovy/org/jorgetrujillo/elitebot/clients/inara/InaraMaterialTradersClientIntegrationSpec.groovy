@@ -24,7 +24,7 @@ class InaraMaterialTradersClientIntegrationSpec extends IntegrationTestBase {
     matTraders[0].stationName == 'Bauschinger Terminal'
     matTraders[0].materialTraderType == MaterialTraderType.ENCODED
     matTraders[0].distanceFromRefSystemLy == 0
-    matTraders[0].distanceFromStarLs == 17
+    matTraders[0].distanceFromStarLs > 15 && matTraders[0].distanceFromStarLs < 20
 
     matTraders[1].systemName == 'Paraudika'
     matTraders[1].stationName == 'Tem Station'
@@ -36,7 +36,7 @@ class InaraMaterialTradersClientIntegrationSpec extends IntegrationTestBase {
     matTraders[2].stationName == 'Griggs City'
     matTraders[2].materialTraderType == MaterialTraderType.MANUFACTURED
     matTraders[2].distanceFromRefSystemLy == 19.43
-    matTraders[2].distanceFromStarLs == 957
+    matTraders[2].distanceFromStarLs > 920 && matTraders[2].distanceFromStarLs < 980
 
   }
 }

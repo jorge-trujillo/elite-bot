@@ -13,11 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.SpringApplication
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 
 @SpringBootApplication
-@EnableAutoConfiguration
 @Slf4j
 class Application implements CommandLineRunner {
 
@@ -91,7 +89,7 @@ class Application implements CommandLineRunner {
     }
   }
 
-  private void logMessage(User logUser, Sender sender, String message, String response) {
+  private static void logMessage(User logUser, Sender sender, String message, String response) {
 
     if (logUser) {
       String logEntry = "**Request from ${sender.name}**: \n" +

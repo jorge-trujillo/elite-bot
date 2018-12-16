@@ -9,8 +9,9 @@ buildscript {
     dockerComposeVersion = '0.3.23'
 
     // compile dependencies
-    groovyVersion = '2.4.14'
-    springBootVersion = '2.0.4.RELEASE'
+    groovyVersion = '2.5.4'
+    springBootVersion = '2.1.1.RELEASE'
+    springVersion = '5.1.3.RELEASE'
     jsoupVersion = '1.11.3'
     jacksonVersion = '2.9.6'
     apacheCommonsText = '1.4'
@@ -18,7 +19,7 @@ buildscript {
     // test dependencies
     cglibVersion = '3.2.4'
     objenesisVersion = '2.4'
-    spockVersion = '1.1-groovy-2.4'
+    spockVersion = '1.2-groovy-2.5'
     mockServerVersion = '5.2.3'
     aspectjVersion = '1.8.13'
 
@@ -48,14 +49,14 @@ apply plugin: 'com.avast.gradle.docker-compose'
 
 group 'org.jorgetrujillo.elitebot'
 
-version '0.2.2'
+version '0.3.0'
 
 dependencies {
   // Use the latest Groovy version for building this library
   compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
 
   compile "org.springframework.boot:spring-boot-starter:${springBootVersion}"
-  compile "org.springframework:spring-web:5.0.8.RELEASE"
+  compile "org.springframework:spring-web:${springVersion}"
 
   compile "org.jsoup:jsoup:${jsoupVersion}"
 
@@ -133,7 +134,7 @@ codenarcFunctionalTest {
 }
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '4.6'
+  gradleVersion = '4.10.2'
 }
 
 springBoot {

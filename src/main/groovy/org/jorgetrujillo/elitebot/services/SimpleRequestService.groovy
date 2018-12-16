@@ -169,7 +169,7 @@ class SimpleRequestService {
   private void parsePowerTokens(int index, List<String> tokens, ServiceRequest serviceRequest) {
     List<String> powerTokens = getTokensAfter(index, tokens)
     if (powerTokens.last() in ['c', 'e']) {
-      String powerEffectString = powerTokens.pop()
+      String powerEffectString = powerTokens.removeLast()
       PowerEffect powerEffect = powerEffectString == 'c' ? PowerEffect.CONTROL : PowerEffect.EXPLOITED
       serviceRequest.systemCriteria.powerEffect = powerEffect
     }

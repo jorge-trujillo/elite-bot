@@ -31,7 +31,7 @@ class EddbStationsClientIntegrationSpec extends IntegrationTestBase {
     stations[0].url != null
     !stations[0].planetary
     stations[0].landingPad == PadSize.L
-    stations[0].distanceFromStarLs == 326
+    stations[0].distanceFromStarLs > 300 && stations[0].distanceFromStarLs < 400
 
     stations[0].systemName == 'Shinrarta Dezhra'
 
@@ -75,7 +75,7 @@ class EddbStationsClientIntegrationSpec extends IntegrationTestBase {
     stations[1].url
     stations[1].planetary
     stations[1].allegiance == Allegiance.EMPIRE
-    stations[1].distanceFromStarLs == 170186
+    stations[1].distanceFromStarLs > 170000 && stations[1].distanceFromStarLs < 170500
     stations[1].distanceFromRefLy == 0
     stations[1].landingPad == PadSize.L
 
@@ -103,7 +103,7 @@ class EddbStationsClientIntegrationSpec extends IntegrationTestBase {
     stations[0].name == 'Zahn Enterprise'
     stations[0].systemName == 'HIP 84255'
     stations[0].allegiance == Allegiance.FEDERATION
-    stations[0].distanceFromStarLs == 1072
+    stations[0].distanceFromStarLs > 1050 && stations[0].distanceFromStarLs < 1100
     stations[0].distanceFromRefLy == 6.71
   }
 
