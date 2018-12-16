@@ -36,7 +36,7 @@ class EddbSystemsClientIntegrationSpec extends IntegrationTestBase {
     Station station = systems[0].stations.find { it.id == '45711' }
     station.name == 'Barnes Enterprise'
     station.landingPad == PadSize.L
-    station.distanceFromStarLs == 110
+    station.distanceFromStarLs > 100 && station.distanceFromStarLs < 150
 
     and: 'Second system is Mayaco'
     systems[1].name == 'Mayaco'

@@ -1,4 +1,4 @@
-FROM openjdk:8u151-jre-slim
+FROM adoptopenjdk/openjdk11-openj9:jdk-11.28
 MAINTAINER Jorge Trujillo <jorge.a.trujillo@target.com>
 
 ENV HOME /root

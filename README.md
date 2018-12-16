@@ -54,8 +54,12 @@ Gives you the distance between two systems.
 distance: <system 1> to: <system 2>
 ```
 
-## *Future Phases*
-
 ### Find the nearest material trader
+
+```
+find: mat trader near: <system>
+```
+
+## *Future Phases*
 
 ### Find me a material
