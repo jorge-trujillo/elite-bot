@@ -2,6 +2,12 @@
 
 This is a Discord Bot meant to help with Elite Dangerous.
 
+## Gradle
+
+To generate a wrapper:
+```bash
+gradle wrapper --gradle-version 5.6.3 --distribution-type all
+```
 ## Request Format (Phase 1)
 
 You can make the following type of requests:
